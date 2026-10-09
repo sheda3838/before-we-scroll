@@ -620,3 +620,404 @@ The environment image will be used to understand information such as:
 - possible obstacles
 
 The existing MissionContext confirmation flow will remain the central point where users can review and correct AI interpretation before mission generation begins.
+
+
+# Phase 2 — Multimodal Context Extraction
+
+**Status:** Completed
+
+## Goal
+
+Phase 2 extended Outventure AI from text-only context extraction to multimodal understanding.
+
+The target flow became:
+
+**Text only**
+OR  
+**Image only**
+OR  
+**Text + Image**
+→ **Unified MissionContext**
+→ **Editable confirmation screen**
+
+The purpose of this phase was to allow the system to understand the user's physical surroundings in addition to their written activity requirements.
+
+---
+
+## Vision Model Validation
+
+Before integrating image upload into the production flow, `gemini-3.1-flash-lite` was evaluated specifically for environment understanding.
+
+The model was tested with several different environment types including:
+
+- grassy public park
+- residential backyard
+- children's playground
+- indoor recreation room
+- sandy beach
+
+The evaluation checked whether the model could identify:
+
+- environment type
+- indoor / outdoor
+- broad usable space size
+- surface
+- visible environment features
+- visible obstacles
+- clearly visible activity equipment
+
+The model was also tested with:
+
+- image-only requests
+- text + image requests
+- deliberate text-image conflicts
+
+---
+
+## Vision Evaluation Results
+
+### Image-Only
+
+The model correctly identified environment information from all tested scenes.
+
+Examples included:
+
+- park → outdoor, large, grass, path, trees, bench
+- backyard → outdoor, grass/patio, fence, visible soccer ball
+- playground → outdoor, play structures, swings, woodchip surface
+- indoor room → indoor, large room, wood floor
+- beach → outdoor, large, sand, ocean, umbrellas, volleyball
+
+User-intent fields such as:
+
+- people count
+- duration
+- activity goal
+
+remained empty when no text was provided.
+
+This confirmed that the model was not inventing unrelated user context.
+
+---
+
+## Text + Image Context Merging
+
+The model successfully merged text-based intent with image-based environment information into one `MissionContext`.
+
+Example:
+
+Text:
+
+> We are 4 people and have 20 minutes. We want something fun.
+
+Image:
+
+> Grassy public park
+
+Result:
+
+- peopleCount = 4
+- durationMinutes = 20
+- activityGoal = fun
+- environment.type = park
+- indoorOutdoor = outdoor
+- surface = grass
+- visible environmental features extracted from the image
+
+The application does not maintain separate text and image context objects.
+
+Both sources are merged into a single structured MissionContext.
+
+---
+
+## Text / Image Conflict Handling
+
+A deliberate conflict test was performed.
+
+Text claimed that the user was outside in a public park while the supplied image clearly showed an indoor room.
+
+The model correctly prioritized visible physical evidence for environment-specific fields.
+
+The resulting context identified:
+
+- indoor environment
+- room/community space
+- wood flooring
+
+instead of incorrectly forcing the textual park description into the visual environment.
+
+The confirmation screen remains the final user-controlled step where any incorrect AI interpretation can be corrected.
+
+---
+
+## Multimodal Performance
+
+Observed benchmark performance:
+
+### Text Only
+
+- Average latency: approximately **2.88 seconds**
+- Median latency: approximately **1.12 seconds**
+
+### Image Only
+
+- Average latency: approximately **6.21 seconds**
+- Median latency: approximately **7.64 seconds**
+
+### Text + Image
+
+- Average latency: approximately **7.02 seconds**
+- Median latency: approximately **7.48 seconds**
+
+All tested multimodal requests completed successfully.
+
+The additional image-processing latency remained acceptable for an interactive workflow.
+
+---
+
+# Production Image Input
+
+The main Outventure AI interface was extended to support optional environment images.
+
+Users can now use:
+
+- text only
+- image only
+- text + image together
+
+The existing endpoint remains:
+
+`POST /api/context/analyze`
+
+The client sends multimodal requests using `FormData`.
+
+Supported values:
+
+- `text` — optional
+- `image` — optional
+
+At least one must be present.
+
+---
+
+## Supported Image Types
+
+The client currently accepts:
+
+- JPEG
+- PNG
+- WebP
+
+A client-side file-size limit is applied before submission.
+
+The image is not permanently stored.
+
+It exists only for the current analysis request and is passed to the Google GenAI API as image data.
+
+No database, disk persistence, or cloud image storage is currently used.
+
+---
+
+# Desktop Image Experience
+
+On desktop/laptop devices, the user sees:
+
+**Choose Image**
+
+This opens the normal system file picker.
+
+A selected image displays:
+
+- preview
+- file name
+- file size
+- change option
+- remove option
+
+---
+
+# Mobile Camera & Gallery Experience
+
+Mobile/touch-capable devices provide:
+
+- **Take Photo**
+- **Choose Photo**
+
+The camera input uses the standard browser capability:
+
+`capture="environment"`
+
+to prefer the rear/environment-facing camera.
+
+No custom camera implementation or external camera package is used.
+
+---
+
+## Desktop / Mobile Detection Improvement
+
+The initial responsive implementation displayed the camera action on desktop in some cases.
+
+This was corrected before completing Phase 2.
+
+The UI now uses lightweight browser capability checks based on:
+
+- `navigator.maxTouchPoints`
+- `matchMedia("(pointer: coarse)")`
+
+Desktop/laptop environments show only:
+
+**Choose Image**
+
+Touch/mobile environments show:
+
+- **Take Photo**
+- **Choose Photo**
+
+No third-party device detection package or large user-agent parsing logic is used.
+
+---
+
+# Stale Context Prevention
+
+An important state-management fix was added before completing Phase 2.
+
+Previously, a user could:
+
+1. analyze an image
+2. receive an extracted MissionContext
+3. remove or replace the image
+4. still see the context generated from the previous image
+
+This could result in stale or misleading information.
+
+The application now clears the previous analysis whenever an image is:
+
+- removed
+- replaced
+- changed through Choose Image / Choose Photo
+- replaced using Take Photo
+
+The following generated state is reset:
+
+- extracted MissionContext
+- latency
+- attempt diagnostics
+- previous analysis error state
+- feature draft values
+- obstacle draft values
+- equipment draft values
+
+The confirmation card disappears immediately.
+
+---
+
+## Text Preservation During Image Changes
+
+Changing or removing an image does **not** clear the user's written input.
+
+Example:
+
+User enters:
+
+> We are 4 people and have 20 minutes.
+
+The user uploads and analyzes Image A.
+
+If Image A is later removed:
+
+- the generated MissionContext is cleared
+- old diagnostics are cleared
+- the original text remains
+
+The user can then re-analyze the text alone or select a different image.
+
+---
+
+# Manual Phase 2 Validation
+
+The production multimodal flow was manually tested using several real sample images.
+
+### Football Stadium
+
+The model correctly extracted:
+
+- soccer stadium
+- outdoor
+- large space
+- natural grass
+- stadium seating
+- field markings
+- soccer ball as available equipment
+
+No user intent values were invented.
+
+### Indoor Room
+
+The model correctly extracted:
+
+- indoor room
+- medium space
+- wood flooring
+- brick walls
+- ceiling lighting
+
+Equipment remained empty.
+
+### Open Grassy Area
+
+The model correctly extracted:
+
+- outdoor grassy field / hill
+- large space
+- grass
+- open field
+
+No equipment or unrelated activity details were invented.
+
+### Playground / Play Structure
+
+The model correctly recognized:
+
+- outdoor grass environment
+- large wooden pirate-ship play structure
+- slide
+- rope/ramp features
+- swings
+- surrounding hedgerow
+
+These elements were correctly treated as environmental features rather than user-owned equipment.
+
+---
+
+# Phase 2 Result
+
+Outventure AI now supports the complete multimodal context pipeline:
+
+**Text only**
+OR  
+**Image only**
+OR  
+**Text + Image**
+
+→ **Gemini 3.1 Flash Lite**
+→ **Unified MissionContext**
+→ **Validation / normalization**
+→ **Editable confirmation UI**
+
+The system can now understand both the user's intent and the physical environment around them before generating any missions.
+
+---
+
+# Next Phase — Voice Interaction
+
+The next phase will introduce ElevenLabs.
+
+The planned direction is to support voice as another natural input/output method.
+
+Expected areas include:
+
+- speech-to-text for spoken user context
+- spoken mission instructions using text-to-speech
+- mobile-friendly voice interaction
+
+The existing text + image context pipeline will remain intact and voice will be added on top of it rather than replacing it.

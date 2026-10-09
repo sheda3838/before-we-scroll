@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   MissionContext,
   IntensityLevel,
@@ -25,6 +25,11 @@ interface Diagnostics {
 
 export default function Home() {
   const [inputText, setInputText] = useState("");
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [extractedContext, setExtractedContext] = useState<MissionContext | null>(null);
@@ -36,9 +41,88 @@ export default function Home() {
   const [obstaclesDraft, setObstaclesDraft] = useState("");
   const [equipmentDraft, setEquipmentDraft] = useState("");
 
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+
+  // Detect mobile/touch capability client-side
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const hasTouch =
+        navigator.maxTouchPoints > 0 ||
+        window.matchMedia("(pointer: coarse)").matches;
+      setIsTouchDevice(Boolean(hasTouch));
+    }
+  }, []);
+
+  // Clean up object URLs on unmount or file change
+  useEffect(() => {
+    return () => {
+      if (imagePreviewUrl) {
+        URL.revokeObjectURL(imagePreviewUrl);
+      }
+    };
+  }, [imagePreviewUrl]);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setFileError(null);
+
+    const validMimes = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
+    if (!validMimes.includes(file.type)) {
+      setFileError("Please choose a valid JPEG, PNG, or WebP photo.");
+      e.target.value = "";
+      return;
+    }
+
+    // 10MB limit
+    if (file.size > 10 * 1024 * 1024) {
+      setFileError("This photo is larger than 10MB. Please choose a smaller file.");
+      e.target.value = "";
+      return;
+    }
+
+    if (imagePreviewUrl) {
+      URL.revokeObjectURL(imagePreviewUrl);
+    }
+
+    const preview = URL.createObjectURL(file);
+    setSelectedImage(file);
+    setImagePreviewUrl(preview);
+    e.target.value = "";
+
+    // Reset all previous analysis results when an image is selected or replaced
+    setExtractedContext(null);
+    setLatencyMs(null);
+    setDiagnostics(null);
+    setError(null);
+    setFeaturesDraft("");
+    setObstaclesDraft("");
+    setEquipmentDraft("");
+  };
+
+  const handleRemoveImage = () => {
+    if (imagePreviewUrl) {
+      URL.revokeObjectURL(imagePreviewUrl);
+    }
+    setSelectedImage(null);
+    setImagePreviewUrl(null);
+    setFileError(null);
+
+    // Reset all previous analysis results when an image is removed
+    setExtractedContext(null);
+    setLatencyMs(null);
+    setDiagnostics(null);
+    setError(null);
+    setFeaturesDraft("");
+    setObstaclesDraft("");
+    setEquipmentDraft("");
+  };
+
   const handleAnalyze = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!inputText.trim()) return;
+    if (!inputText.trim() && !selectedImage) return;
 
     setLoading(true);
     setError(null);
@@ -47,10 +131,17 @@ export default function Home() {
     setDiagnostics(null);
 
     try {
+      const formData = new FormData();
+      if (inputText.trim()) {
+        formData.append("text", inputText.trim());
+      }
+      if (selectedImage) {
+        formData.append("image", selectedImage);
+      }
+
       const res = await fetch("/api/context/analyze", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: inputText.trim() }),
+        body: formData,
       });
 
       const data = await res.json();
@@ -132,9 +223,35 @@ export default function Home() {
   // Predefined age group chips
   const ageOptions = ["Kids", "Teens", "Adults", "Mixed"];
 
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024 * 1024) {
+      return `${(bytes / 1024).toFixed(0)} KB`;
+    }
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
   return (
     <main className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 flex flex-col items-center">
       <div className="w-full max-w-2xl space-y-6">
+
+        {/* Hidden File Inputs for Standard Camera & Gallery Browsing */}
+        <input
+          ref={cameraInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={handleFileSelect}
+          className="hidden"
+          id="camera-input"
+        />
+        <input
+          ref={galleryInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={handleFileSelect}
+          className="hidden"
+          id="gallery-input"
+        />
 
         {/* Header */}
         <div className="text-center space-y-2">
@@ -146,36 +263,151 @@ export default function Home() {
             Plan Your Next Outventure
           </h1>
           <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-md mx-auto">
-            Describe your group, space, and goals — we will organize your mission context in seconds.
+            Describe your group, snap or upload your surroundings — we will organize your mission context in seconds.
           </p>
         </div>
 
         {/* Input Form Card */}
-        <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800/80 space-y-4">
-          <form onSubmit={handleAnalyze} className="space-y-4">
+        <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800/80 space-y-5">
+          <form onSubmit={handleAnalyze} className="space-y-5">
+            {/* 1. Text Request */}
             <div>
-              <label
-                htmlFor="activity-request"
-                className="block text-sm font-semibold text-zinc-700 dark:text-zinc-200 mb-1.5"
-              >
-                What would you like to do?
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label
+                  htmlFor="activity-request"
+                  className="block text-sm font-semibold text-zinc-700 dark:text-zinc-200"
+                >
+                  What would you like to do?
+                </label>
+                <span className="text-xs text-zinc-400 font-normal">
+                  {selectedImage ? "Optional if photo provided" : "Text or photo required"}
+                </span>
+              </div>
               <textarea
                 id="activity-request"
                 rows={3}
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
-                placeholder="We are 6 people, have 15 minutes, and want something fun and active in a grassy playground..."
+                placeholder="We are 6 people, have 15 minutes, and want something fun and active..."
                 disabled={loading}
                 className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-800/50 px-4 py-3 text-sm focus:border-emerald-500 focus:bg-white dark:focus:bg-zinc-800 focus:ring-2 focus:ring-emerald-500/20 outline-none transition disabled:opacity-50 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 resize-y"
               />
             </div>
 
-            <div className="flex items-center justify-between gap-3 flex-wrap">
+            {/* 2. Photo of Surroundings (Optional) */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-sm font-semibold text-zinc-700 dark:text-zinc-200">
+                  Add a photo of your surroundings
+                </label>
+                <span className="text-xs text-zinc-400 font-normal">
+                  Optional
+                </span>
+              </div>
+
+              {!selectedImage ? (
+                <div className="border border-dashed border-zinc-300 dark:border-zinc-750 rounded-xl p-4 bg-zinc-50/40 dark:bg-zinc-850/30 text-center transition hover:border-zinc-400 dark:hover:border-zinc-650">
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-3">
+                    Upload a park, playground, backyard, or room photo to automatically detect the space, surface, and equipment.
+                  </p>
+                  <div className="flex items-center justify-center gap-2.5 flex-wrap">
+                    {isTouchDevice ? (
+                      <>
+                        {/* Mobile camera capture */}
+                        <button
+                          type="button"
+                          disabled={loading}
+                          onClick={() => cameraInputRef.current?.click()}
+                          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 transition cursor-pointer"
+                        >
+                          <span className="text-sm">📷</span>
+                          <span>Take Photo</span>
+                        </button>
+
+                        {/* Mobile gallery picker */}
+                        <button
+                          type="button"
+                          disabled={loading}
+                          onClick={() => galleryInputRef.current?.click()}
+                          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/80 transition cursor-pointer"
+                        >
+                          <span className="text-sm">🖼️</span>
+                          <span>Choose Photo</span>
+                        </button>
+                      </>
+                    ) : (
+                      /* Desktop / laptop file picker */
+                      <button
+                        type="button"
+                        disabled={loading}
+                        onClick={() => galleryInputRef.current?.click()}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/80 transition cursor-pointer"
+                      >
+                        <span className="text-sm">🖼️</span>
+                        <span>Choose Image</span>
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-zinc-400 mt-2">
+                    JPEG, PNG, or WebP up to 10MB
+                  </p>
+                </div>
+              ) : (
+                /* Selected Image Preview Card */
+                <div className="flex items-center justify-between gap-3.5 p-3 rounded-xl border border-emerald-200/80 dark:border-emerald-900/60 bg-emerald-50/30 dark:bg-emerald-950/20">
+                  <div className="flex items-center gap-3 overflow-hidden">
+                    {imagePreviewUrl && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={imagePreviewUrl}
+                        alt="Surroundings preview"
+                        className="w-14 h-14 rounded-lg object-cover border border-emerald-300/60 dark:border-emerald-800 shrink-0"
+                      />
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-zinc-800 dark:text-zinc-200 truncate">
+                        {selectedImage.name}
+                      </p>
+                      <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                        {formatFileSize(selectedImage.size)} · Ready to analyze
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      disabled={loading}
+                      onClick={() => galleryInputRef.current?.click()}
+                      className="text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:underline cursor-pointer"
+                    >
+                      Change
+                    </button>
+                    <button
+                      type="button"
+                      disabled={loading}
+                      onClick={handleRemoveImage}
+                      className="px-2.5 py-1 text-xs font-medium rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition cursor-pointer"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {fileError && (
+                <p className="text-xs text-red-600 dark:text-red-400 mt-1.5 font-medium">
+                  {fileError}
+                </p>
+              )}
+            </div>
+
+            {/* 3. Action Bar */}
+            <div className="flex items-center justify-between gap-3 flex-wrap pt-1 border-t border-zinc-100 dark:border-zinc-800">
               <button
                 id="analyze-btn"
                 type="submit"
-                disabled={loading || !inputText.trim()}
+                disabled={loading || (!inputText.trim() && !selectedImage)}
                 className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 active:bg-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer"
               >
                 {loading ? (
@@ -229,7 +461,13 @@ export default function Home() {
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
               </svg>
-              <span>Understanding your request details...</span>
+              <span>
+                {selectedImage && inputText.trim()
+                  ? "Analyzing your description and surroundings photo..."
+                  : selectedImage
+                  ? "Analyzing your surroundings photo..."
+                  : "Understanding your request details..."}
+              </span>
             </div>
           )}
 
@@ -264,6 +502,7 @@ export default function Home() {
                     setDiagnostics(null);
                     setError(null);
                     setInputText("");
+                    handleRemoveImage();
                   }}
                   className="text-xs font-medium text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition cursor-pointer px-2 py-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800"
                 >

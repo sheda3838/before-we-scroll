@@ -20,89 +20,95 @@ interface AttemptRecord {
 }
 
 // ---------------------------------------------------------------------------
-// Prompt builder
+// Multimodal Prompt Builder
 // ---------------------------------------------------------------------------
 
-function buildExtractionPrompt(userText: string): string {
-  return `You are the context extraction engine for Outventure AI.
+function buildMultimodalExtractionPrompt(
+  userText: string | null,
+  hasImage: boolean
+): string {
+  const parts: string[] = [
+    `You are the context extraction engine for Outventure AI.`,
+    ``,
+    `Your job is to extract mission context into a structured MissionContext JSON object.`,
+    ``,
+  ];
 
-Your job is ONLY to extract information explicitly stated in the user's request.
-
-Do not invent information.
-Do not assume defaults.
-Do not infer missing values unless they are directly and safely implied by the wording.
-
-For every unknown scalar field, return null.
-For unknown list fields, return [].
-
-Return ONLY valid JSON matching the supplied MissionContext schema:
-{
-  "peopleCount": number | null,
-  "durationMinutes": number | null,
-  "activityGoal": string | null,
-  "intensity": "low" | "medium" | "high" | null,
-  "ageGroup": string | null,
-  "environment": {
-    "type": string | null,
-    "indoorOutdoor": "indoor" | "outdoor" | null,
-    "spaceSize": "small" | "medium" | "large" | null,
-    "surface": string | null,
-    "features": string[],
-    "obstacles": string[]
-  },
-  "equipmentAvailable": string[],
-  "constraints": {
-    "noRunning": boolean | null,
-    "kidFriendly": boolean | null,
-    "quietActivity": boolean | null
+  if (userText && hasImage) {
+    parts.push(
+      `SOURCES PROVIDED:`,
+      `1. User natural language request: "${userText}"`,
+      `2. Environment photograph of the user's surroundings.`,
+      ``,
+      `EXTRACTION & MERGING RULES:`,
+      `- Extract user intent (peopleCount, durationMinutes, activityGoal, intensity, ageGroup, constraints, explicitly requested equipment) from the user text.`,
+      `- Extract physical environment details (type, indoorOutdoor, spaceSize, surface, features, obstacles) and clearly visible equipment from the image.`,
+      `- If user text and image conflict on physical location (e.g. text says "outside in a park" but image clearly shows an indoor room), prioritize the visible image evidence for physical environment fields (type, indoorOutdoor, surface, features).`,
+      `- Combine both sources into ONE single MissionContext object. Do not return separate objects.`
+    );
+  } else if (hasImage) {
+    parts.push(
+      `SOURCE PROVIDED:`,
+      `1. Environment photograph of the surroundings. (No user text provided)`,
+      ``,
+      `EXTRACTION RULES:`,
+      `- Extract physical environment details (type, indoorOutdoor, spaceSize, surface, features, obstacles) and clearly visible equipment directly from the image.`,
+      `- Do NOT assume or invent peopleCount, durationMinutes, activityGoal, intensity, ageGroup, or constraints from an environment image alone. Return null for those scalar fields.`
+    );
+  } else {
+    parts.push(
+      `SOURCE PROVIDED:`,
+      `1. User natural language request: "${userText}"`,
+      ``,
+      `EXTRACTION RULES:`,
+      `- Extract only information explicitly stated or safely implied by the user text.`
+    );
   }
-}
 
-Do not include markdown.
-Do not include explanations.
-Do not include code fences.
+  parts.push(
+    ``,
+    `GENERAL RULES:`,
+    `- Do not invent information. Do not assume defaults.`,
+    `- Broad spaceSize estimation only: "small", "medium", or "large". Do not guess exact measurements.`,
+    `- Equipment distinction: only clearly visible, usable activity equipment (e.g. football, volleyball, frisbee, cones, ball, ropes) belongs in equipmentAvailable. Built fixtures (park benches, slides, swings, patio chairs, tables, fences) belong in environment.features.`,
+    `- For every unknown scalar field, return null.`,
+    `- For unknown list fields, return [].`,
+    ``,
+    `Return ONLY valid JSON matching this schema:`,
+    `{`,
+    `  "peopleCount": number | null,`,
+    `  "durationMinutes": number | null,`,
+    `  "activityGoal": string | null,`,
+    `  "intensity": "low" | "medium" | "high" | null,`,
+    `  "ageGroup": string | null,`,
+    `  "environment": {`,
+    `    "type": string | null,`,
+    `    "indoorOutdoor": "indoor" | "outdoor" | null,`,
+    `    "spaceSize": "small" | "medium" | "large" | null,`,
+    `    "surface": string | null,`,
+    `    "features": string[],`,
+    `    "obstacles": string[]`,
+    `  },`,
+    `  "equipmentAvailable": string[],`,
+    `  "constraints": {`,
+    `    "noRunning": boolean | null,`,
+    `    "kidFriendly": boolean | null,`,
+    `    "quietActivity": boolean | null`,
+    `  }`,
+    `}`,
+    ``,
+    `Do not include markdown code fences or explanations.`
+  );
 
-User request: "${userText}"`;
+  return parts.join("\n");
 }
 
 // ---------------------------------------------------------------------------
-// Route handler
+// Route handler (supports Text-only, Image-only, and Text + Image)
 // ---------------------------------------------------------------------------
 
 export async function POST(request: Request) {
-  // ── Parse request body ────────────────────────────────────────────────────
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Malformed JSON request body.",
-      },
-      { status: 400 }
-    );
-  }
-
-  if (
-    !body ||
-    typeof body !== "object" ||
-    !("text" in body) ||
-    typeof (body as { text: unknown }).text !== "string" ||
-    (body as { text: string }).text.trim().length === 0
-  ) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Invalid input: 'text' field must be a non-empty string.",
-      },
-      { status: 400 }
-    );
-  }
-
-  const userText = (body as { text: string }).text.trim();
   const apiKey = process.env.GEMINI_API_KEY;
-
   if (!apiKey) {
     return NextResponse.json(
       {
@@ -113,51 +119,154 @@ export async function POST(request: Request) {
     );
   }
 
-  const prompt = buildExtractionPrompt(userText);
+  const contentType = request.headers.get("content-type") || "";
 
-  // ── Gemma call with attempt instrumentation ───────────────────────────────
-  // NOTE: The existing behavior is a single attempt (no retry loop).
-  // This instrumentation layer records per-attempt timing without changing
-  // the retry count, retry delays, or retry conditions.
+  let userText: string | null = null;
+  let imageBuffer: Buffer | null = null;
+  let imageMimeType: string | null = null;
+
+  // ── Parse multipart/form-data or application/json ─────────────────────────
+  if (contentType.includes("multipart/form-data")) {
+    let formData: FormData;
+    try {
+      formData = await request.formData();
+    } catch {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Malformed form data request.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const textEntry = formData.get("text");
+    if (typeof textEntry === "string" && textEntry.trim().length > 0) {
+      userText = textEntry.trim();
+    }
+
+    const fileEntry = formData.get("image");
+    if (fileEntry instanceof File && fileEntry.size > 0) {
+      const allowedMimes = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
+      if (!allowedMimes.includes(fileEntry.type)) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Unsupported image format. Please upload JPEG, PNG, or WebP.",
+          },
+          { status: 400 }
+        );
+      }
+
+      // 10MB limit
+      if (fileEntry.size > 10 * 1024 * 1024) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Image exceeds the maximum allowed 10MB file size.",
+          },
+          { status: 400 }
+        );
+      }
+
+      try {
+        const arrayBuffer = await fileEntry.arrayBuffer();
+        imageBuffer = Buffer.from(arrayBuffer);
+        imageMimeType = fileEntry.type;
+      } catch {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Failed to read image data.",
+          },
+          { status: 400 }
+        );
+      }
+    }
+  } else {
+    // JSON fallback
+    try {
+      const body = await request.json();
+      if (
+        body &&
+        typeof body === "object" &&
+        "text" in body &&
+        typeof (body as { text: unknown }).text === "string" &&
+        (body as { text: string }).text.trim().length > 0
+      ) {
+        userText = (body as { text: string }).text.trim();
+      }
+    } catch {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Malformed JSON request body.",
+        },
+        { status: 400 }
+      );
+    }
+  }
+
+  // Reject only when BOTH text and image are missing
+  if (!userText && !imageBuffer) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Please provide either activity text or an environment photo.",
+      },
+      { status: 400 }
+    );
+  }
+
+  const prompt = buildMultimodalExtractionPrompt(userText, !!imageBuffer);
+
+  // ── Prepare contents for Google GenAI ─────────────────────────────────────
+  const contents: Array<string | { inlineData: { mimeType: string; data: string } }> = [];
+
+  if (imageBuffer && imageMimeType) {
+    contents.push({
+      inlineData: {
+        mimeType: imageMimeType,
+        data: imageBuffer.toString("base64"),
+      },
+    });
+  }
+  contents.push(prompt);
+
+  // ── Model call with attempt instrumentation ───────────────────────────────
   const totalStart = Date.now();
   const ai = new GoogleGenAI({ apiKey });
   const attempts: AttemptRecord[] = [];
 
-  // Single attempt — mirrors the existing behavior exactly.
-  // Structured as a loop so the instrumentation can track retries if the
-  // upstream retry policy ever changes, without altering current behavior.
-  const MAX_ATTEMPTS = 1; // ← do not change; preserves existing retry behavior
+  const MAX_ATTEMPTS = 1;
   let lastError: unknown = null;
   let successOutput: string | null = null;
 
   for (let attemptNum = 1; attemptNum <= MAX_ATTEMPTS; attemptNum++) {
     const attemptStart = Date.now();
-    console.log(`[Gemma] Attempt ${attemptNum} started`);
+    console.log(`[Analyze] Attempt ${attemptNum} started (model: ${MODEL_NAME})`);
 
     try {
       const response = await ai.models.generateContent({
         model: MODEL_NAME,
-        contents: prompt,
+        contents,
       });
 
       const attemptMs = Date.now() - attemptStart;
       const rawOutput = response.text?.trim() || "";
 
       if (!rawOutput) {
-        // Treat empty response as a failure for this attempt
         const record: AttemptRecord = {
           attempt: attemptNum,
           latencyMs: attemptMs,
           success: false,
           status: null,
-          errorMessage: "Empty response received from Gemma model.",
+          errorMessage: "Empty response received from extraction model.",
         };
         attempts.push(record);
-        console.log(
-          `[Gemma] Attempt ${attemptNum} failed — empty response — ${attemptMs}ms`
-        );
-        lastError = new Error("Empty response received from Gemma model.");
-        break; // No retry — preserve existing behavior
+        console.log(`[Analyze] Attempt ${attemptNum} failed — empty response — ${attemptMs}ms`);
+        lastError = new Error("Empty response received from extraction model.");
+        break;
       }
 
       const record: AttemptRecord = {
@@ -167,28 +276,23 @@ export async function POST(request: Request) {
         status: 200,
       };
       attempts.push(record);
-      console.log(
-        `[Gemma] Attempt ${attemptNum} succeeded — ${attemptMs}ms`
-      );
+      console.log(`[Analyze] Attempt ${attemptNum} succeeded — ${attemptMs}ms`);
       successOutput = rawOutput;
       break;
     } catch (error: unknown) {
       const attemptMs = Date.now() - attemptStart;
 
-      // Try to extract an HTTP status code from the error if available
       let status: number | null = null;
       let errorMessage = "An unexpected error occurred.";
 
       if (error instanceof Error) {
         errorMessage = error.message;
-        // @google/genai surfaces status in error.status or within the message
         const errWithStatus = error as Error & { status?: number; statusCode?: number };
         if (typeof errWithStatus.status === "number") {
           status = errWithStatus.status;
         } else if (typeof errWithStatus.statusCode === "number") {
           status = errWithStatus.statusCode;
         } else {
-          // Attempt to parse status code from the message text e.g. "… 503 …"
           const match = errorMessage.match(/\b(4\d{2}|5\d{2})\b/);
           if (match) {
             status = parseInt(match[1], 10);
@@ -206,17 +310,14 @@ export async function POST(request: Request) {
       attempts.push(record);
 
       const statusLabel = status !== null ? `${status} — ` : "";
-      console.log(
-        `[Gemma] Attempt ${attemptNum} failed — ${statusLabel}${attemptMs}ms`
-      );
+      console.log(`[Analyze] Attempt ${attemptNum} failed — ${statusLabel}${attemptMs}ms`);
       lastError = error;
-      break; // No retry — preserve existing behavior
+      break;
     }
   }
 
   const totalMs = Date.now() - totalStart;
-  console.log(`[Gemma] Total request time: ${totalMs}ms`);
-  console.log(`[Gemma] Total attempts: ${attempts.length}`);
+  console.log(`[Analyze] Total request time: ${totalMs}ms, attempts: ${attempts.length}`);
 
   const diagnostics = {
     totalAttempts: attempts.length,
