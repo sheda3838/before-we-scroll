@@ -1,12 +1,30 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useSyncExternalStore } from "react";
 import {
   MissionContext,
   IntensityLevel,
-  IndoorOutdoor,
   SpaceSize,
 } from "@/types/missionContext";
+
+function subscribeToTouch(callback: () => void) {
+  if (typeof window === "undefined") return () => {};
+  const mediaQuery = window.matchMedia("(pointer: coarse)");
+  mediaQuery.addEventListener("change", callback);
+  return () => mediaQuery.removeEventListener("change", callback);
+}
+
+function getTouchSnapshot() {
+  if (typeof window === "undefined") return false;
+  return (
+    navigator.maxTouchPoints > 0 ||
+    window.matchMedia("(pointer: coarse)").matches
+  );
+}
+
+function getTouchServerSnapshot() {
+  return false;
+}
 
 // ---------------------------------------------------------------------------
 // Diagnostic types (mirrors the server response shape)
@@ -28,13 +46,24 @@ export default function Home() {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
-  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const isTouchDevice = useSyncExternalStore(subscribeToTouch, getTouchSnapshot, getTouchServerSnapshot);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [extractedContext, setExtractedContext] = useState<MissionContext | null>(null);
   const [latencyMs, setLatencyMs] = useState<number | null>(null);
   const [diagnostics, setDiagnostics] = useState<Diagnostics | null>(null);
+
+  // Voice Recording & Transcription State
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const [micError, setMicError] = useState<string | null>(null);
+
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
 
   // Local draft inputs for array fields to allow natural comma-separated typing
   const [featuresDraft, setFeaturesDraft] = useState("");
@@ -44,16 +73,6 @@ export default function Home() {
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
-  // Detect mobile/touch capability client-side
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const hasTouch =
-        navigator.maxTouchPoints > 0 ||
-        window.matchMedia("(pointer: coarse)").matches;
-      setIsTouchDevice(Boolean(hasTouch));
-    }
-  }, []);
-
   // Clean up object URLs on unmount or file change
   useEffect(() => {
     return () => {
@@ -62,6 +81,193 @@ export default function Home() {
       }
     };
   }, [imagePreviewUrl]);
+
+  // Clean up microphone media stream and recording timer on unmount
+  useEffect(() => {
+    return () => {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, []);
+
+  const formatTimer = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const handleTranscribe = async (audioBlob: Blob, mimeType: string) => {
+    setIsTranscribing(true);
+    setMicError(null);
+
+    try {
+      let ext = "webm";
+      if (mimeType.includes("mp4") || mimeType.includes("m4a")) ext = "mp4";
+      else if (mimeType.includes("ogg")) ext = "ogg";
+      else if (mimeType.includes("wav")) ext = "wav";
+      else if (mimeType.includes("mpeg") || mimeType.includes("mp3")) ext = "mp3";
+
+      const formData = new FormData();
+      formData.append("audio", audioBlob, `speech.${ext}`);
+
+      const res = await fetch("/api/transcribe", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        setMicError(data.error || "Unable to transcribe audio.");
+        return;
+      }
+
+      const transcript = typeof data.text === "string" ? data.text.trim() : "";
+      if (!transcript) {
+        setMicError("No speech detected. Please try again or type your request.");
+        return;
+      }
+
+      // Populate into existing textarea:
+      // If empty: set to transcript.
+      // If already contains text: existing text + space + transcript.
+      setInputText((prev) => {
+        const current = prev.trim();
+        if (!current) {
+          return transcript;
+        }
+        return `${current} ${transcript}`;
+      });
+
+      // Reset stale analysis state immediately if context had been previously generated
+      setExtractedContext(null);
+      setLatencyMs(null);
+      setDiagnostics(null);
+      setError(null);
+      setFeaturesDraft("");
+      setObstaclesDraft("");
+      setEquipmentDraft("");
+    } catch {
+      setMicError("Unable to transcribe audio. Please check your connection and try again.");
+    } finally {
+      setIsTranscribing(false);
+    }
+  };
+
+  const stopRecording = () => {
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
+    }
+
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+    }
+    mediaRecorderRef.current = null;
+
+    // Stop all microphone tracks immediately to release the microphone
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+
+    setIsRecording(false);
+  };
+
+  const startRecording = async () => {
+    setMicError(null);
+
+    if (
+      typeof window === "undefined" ||
+      !navigator.mediaDevices ||
+      typeof navigator.mediaDevices.getUserMedia !== "function" ||
+      typeof window.MediaRecorder === "undefined"
+    ) {
+      setMicError("Voice recording is not supported in this browser. Please type your request instead.");
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      chunksRef.current = [];
+
+      // Determine best supported MIME type
+      const preferredMimes = [
+        "audio/webm;codecs=opus",
+        "audio/webm",
+        "audio/ogg;codecs=opus",
+        "audio/ogg",
+        "audio/mp4",
+        "audio/wav",
+      ];
+      let selectedMimeType = "";
+      for (const mime of preferredMimes) {
+        if (typeof MediaRecorder.isTypeSupported === "function" && MediaRecorder.isTypeSupported(mime)) {
+          selectedMimeType = mime;
+          break;
+        }
+      }
+
+      const recorder = selectedMimeType
+        ? new MediaRecorder(stream, { mimeType: selectedMimeType })
+        : new MediaRecorder(stream);
+
+      recorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          chunksRef.current.push(event.data);
+        }
+      };
+
+      recorder.onstop = async () => {
+        const mime = recorder.mimeType || selectedMimeType || "audio/webm";
+        const audioBlob = new Blob(chunksRef.current, { type: mime });
+        chunksRef.current = [];
+
+        if (audioBlob.size === 0) {
+          return;
+        }
+
+        await handleTranscribe(audioBlob, mime);
+      };
+
+      mediaRecorderRef.current = recorder;
+      recorder.start(250);
+      setIsRecording(true);
+      setRecordingDuration(0);
+
+      // Start 60-second safety limit timer
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
+      const startTime = Date.now();
+      timerIntervalRef.current = setInterval(() => {
+        const elapsedSec = Math.floor((Date.now() - startTime) / 1000);
+        setRecordingDuration(elapsedSec);
+        if (elapsedSec >= 60) {
+          stopRecording();
+        }
+      }, 500);
+    } catch (err: unknown) {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((t) => t.stop());
+        streamRef.current = null;
+      }
+
+      const errorName = (err as { name?: string })?.name;
+      if (errorName === "NotAllowedError" || errorName === "PermissionDeniedError") {
+        setMicError("Microphone access was blocked. Please allow microphone access or type your request instead.");
+      } else if (errorName === "NotFoundError" || errorName === "DevicesNotFoundError") {
+        setMicError("No microphone found on your device. Please type your request instead.");
+      } else {
+        setMicError("Unable to access microphone. Please type your request instead.");
+      }
+    }
+  };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -289,9 +495,74 @@ export default function Home() {
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 placeholder="We are 6 people, have 15 minutes, and want something fun and active..."
-                disabled={loading}
+                disabled={loading || isRecording || isTranscribing}
                 className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-800/50 px-4 py-3 text-sm focus:border-emerald-500 focus:bg-white dark:focus:bg-zinc-800 focus:ring-2 focus:ring-emerald-500/20 outline-none transition disabled:opacity-50 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 resize-y"
               />
+
+              {/* Voice Input Controls & Status */}
+              <div className="flex items-center justify-between mt-2 flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  {!isRecording && !isTranscribing && (
+                    <button
+                      type="button"
+                      onClick={startRecording}
+                      disabled={loading}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 transition cursor-pointer disabled:opacity-50"
+                      title="Record speech to text"
+                    >
+                      <span className="text-sm">🎙</span>
+                      <span>Speak</span>
+                    </button>
+                  )}
+
+                  {isRecording && (
+                    <button
+                      type="button"
+                      onClick={stopRecording}
+                      className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/70 dark:hover:bg-rose-900/70 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800 transition cursor-pointer"
+                    >
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-600" />
+                      </span>
+                      <span>Stop recording</span>
+                      <span className="font-mono text-[11px] font-bold text-rose-600 dark:text-rose-300">
+                        ({formatTimer(recordingDuration)})
+                      </span>
+                    </button>
+                  )}
+
+                  {isTranscribing && (
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
+                      <svg className="animate-spin h-3.5 w-3.5 text-emerald-500" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                      </svg>
+                      <span>Transcribing your voice...</span>
+                    </div>
+                  )}
+                </div>
+
+                {isRecording && (
+                  <span className="text-[11px] text-zinc-400 dark:text-zinc-500">
+                    Max 60 seconds
+                  </span>
+                )}
+              </div>
+
+              {micError && (
+                <div className="mt-2.5 p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-800 dark:text-amber-300 flex items-center justify-between gap-2">
+                  <span className="flex-1">{micError}</span>
+                  <button
+                    type="button"
+                    onClick={() => setMicError(null)}
+                    className="text-amber-600 hover:text-amber-800 dark:text-amber-400 font-bold px-1"
+                    title="Dismiss message"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* 2. Photo of Surroundings (Optional) */}
@@ -407,7 +678,7 @@ export default function Home() {
               <button
                 id="analyze-btn"
                 type="submit"
-                disabled={loading || (!inputText.trim() && !selectedImage)}
+                disabled={loading || isRecording || isTranscribing || (!inputText.trim() && !selectedImage)}
                 className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 active:bg-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer"
               >
                 {loading ? (

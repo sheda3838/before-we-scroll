@@ -1021,3 +1021,136 @@ Expected areas include:
 - mobile-friendly voice interaction
 
 The existing text + image context pipeline will remain intact and voice will be added on top of it rather than replacing it.
+
+
+# Phase 3A — Voice Input with ElevenLabs Speech-to-Text
+
+**Status:** Completed
+
+## Goal
+
+Phase 3A added voice as another natural input method for Outventure AI.
+
+The goal was to let users describe their situation by speaking instead of typing while keeping the existing text and image workflow unchanged.
+
+The implemented flow is:
+
+**User speaks**
+→ **browser records audio**
+→ **ElevenLabs Speech-to-Text**
+→ **transcript inserted into existing text input**
+→ **user reviews or edits transcript**
+→ **existing Gemini context extraction flow continues**
+
+Voice input does not replace the existing textarea.
+
+It acts as another way of filling it.
+
+---
+
+## ElevenLabs Setup
+
+A dedicated ElevenLabs API key was created for Outventure AI with access to:
+
+- Speech-to-Text
+- Text-to-Speech
+
+The key is stored securely in:
+
+`.env.local`
+
+using:
+
+`ELEVENLABS_API_KEY`
+
+The key is only accessed from server-side code and is never exposed to the browser.
+
+Text-to-Speech permission has been prepared for a later phase but is not currently used.
+
+---
+
+# Browser Voice Recording
+
+Voice recording is implemented using the native browser:
+
+`MediaRecorder`
+
+API.
+
+No external audio-recording library was required.
+
+The recording flow is:
+
+1. User clicks **Speak**
+2. Browser requests microphone permission
+3. Audio recording begins
+4. User clicks **Stop**
+5. Recorded chunks are combined into an audio Blob
+6. Audio is sent to the backend for transcription
+7. ElevenLabs returns the transcript
+8. Transcript is inserted into the existing context textarea
+
+A 60-second maximum recording duration is enforced for the MVP.
+
+If the limit is reached, recording stops automatically and transcription begins.
+
+---
+
+# Microphone Permission Handling
+
+Microphone access is requested using:
+
+`navigator.mediaDevices.getUserMedia({ audio: true })`
+
+Friendly fallback messages are displayed for common failure scenarios.
+
+Examples include:
+
+### Permission Blocked
+
+> Microphone access was blocked. Please allow microphone access or type your request instead.
+
+### No Microphone Available
+
+> No microphone found on your device. Please type your request instead.
+
+### Unsupported Browser
+
+> Voice recording is not supported in this browser. Please type your request instead.
+
+Raw browser errors are not displayed to users.
+
+When recording ends or fails, all active MediaStream tracks are stopped immediately so the microphone is released.
+
+---
+
+# Speech-to-Text API
+
+A new server-side endpoint was created:
+
+`POST /api/transcribe`
+
+The endpoint receives recorded audio using:
+
+`multipart/form-data`
+
+with the field:
+
+`audio`
+
+The server:
+
+1. validates that an audio file exists
+2. checks the MIME type
+3. applies a 15MB file-size limit
+4. sends the audio to ElevenLabs Speech-to-Text
+5. receives the transcript
+6. returns the transcript to the frontend
+
+Example response:
+
+```json
+{
+  "success": true,
+  "text": "We are four people and have twenty minutes."
+}
