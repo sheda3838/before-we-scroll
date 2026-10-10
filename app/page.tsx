@@ -6,6 +6,7 @@ import {
   IntensityLevel,
   SpaceSize,
 } from "@/types/missionContext";
+import { Mission } from "@/types/mission";
 
 function subscribeToTouch(callback: () => void) {
   if (typeof window === "undefined") return () => {};
@@ -54,6 +55,13 @@ export default function Home() {
   const [latencyMs, setLatencyMs] = useState<number | null>(null);
   const [diagnostics, setDiagnostics] = useState<Diagnostics | null>(null);
 
+  // Mission Generation State
+  const [generatedMissions, setGeneratedMissions] = useState<Mission[]>([]);
+  const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
+  const [isGeneratingMissions, setIsGeneratingMissions] = useState(false);
+  const [missionGenerationError, setMissionGenerationError] = useState<string | null>(null);
+  const [missionLatencyMs, setMissionLatencyMs] = useState<number | null>(null);
+
   // Voice Recording & Transcription State
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -98,6 +106,47 @@ export default function Home() {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const clearMissions = () => {
+    setGeneratedMissions([]);
+    setSelectedMission(null);
+    setMissionGenerationError(null);
+    setMissionLatencyMs(null);
+  };
+
+  const handleGenerateMissions = async () => {
+    if (!extractedContext || isGeneratingMissions) return;
+
+    setIsGeneratingMissions(true);
+    setMissionGenerationError(null);
+
+    try {
+      const res = await fetch("/api/mission/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ context: extractedContext }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success || !Array.isArray(data.missions) || data.missions.length !== 3) {
+        setMissionGenerationError(
+          data.error || "We couldn't create your missions this time. Please try again."
+        );
+        return;
+      }
+
+      setGeneratedMissions(data.missions as Mission[]);
+      setSelectedMission(null);
+      if (data.diagnostics?.latencyMs) {
+        setMissionLatencyMs(data.diagnostics.latencyMs);
+      }
+    } catch {
+      setMissionGenerationError("We couldn't create your missions this time. Please try again.");
+    } finally {
+      setIsGeneratingMissions(false);
+    }
   };
 
   const handleTranscribe = async (audioBlob: Blob, mimeType: string) => {
@@ -151,6 +200,7 @@ export default function Home() {
       setFeaturesDraft("");
       setObstaclesDraft("");
       setEquipmentDraft("");
+      clearMissions();
     } catch {
       setMicError("Unable to transcribe audio. Please check your connection and try again.");
     } finally {
@@ -306,6 +356,7 @@ export default function Home() {
     setFeaturesDraft("");
     setObstaclesDraft("");
     setEquipmentDraft("");
+    clearMissions();
   };
 
   const handleRemoveImage = () => {
@@ -324,6 +375,7 @@ export default function Home() {
     setFeaturesDraft("");
     setObstaclesDraft("");
     setEquipmentDraft("");
+    clearMissions();
   };
 
   const handleAnalyze = async (e?: React.FormEvent) => {
@@ -335,6 +387,7 @@ export default function Home() {
     setExtractedContext(null);
     setLatencyMs(null);
     setDiagnostics(null);
+    clearMissions();
 
     try {
       const formData = new FormData();
@@ -375,6 +428,7 @@ export default function Home() {
   const updateField = <K extends keyof MissionContext>(key: K, val: MissionContext[K]) => {
     if (!extractedContext) return;
     setExtractedContext({ ...extractedContext, [key]: val });
+    clearMissions();
   };
 
   const updateEnvironment = <K extends keyof MissionContext["environment"]>(
@@ -386,6 +440,7 @@ export default function Home() {
       ...extractedContext,
       environment: { ...extractedContext.environment, [key]: val },
     });
+    clearMissions();
   };
 
   const updateConstraints = <K extends keyof MissionContext["constraints"]>(
@@ -397,6 +452,7 @@ export default function Home() {
       ...extractedContext,
       constraints: { ...extractedContext.constraints, [key]: val },
     });
+    clearMissions();
   };
 
   // Tag removal helpers
@@ -405,6 +461,7 @@ export default function Home() {
     const next = extractedContext.environment.features.filter((_, i) => i !== idx);
     updateEnvironment("features", next);
     setFeaturesDraft(next.join(", "));
+    clearMissions();
   };
 
   const removeObstacle = (idx: number) => {
@@ -412,6 +469,7 @@ export default function Home() {
     const next = extractedContext.environment.obstacles.filter((_, i) => i !== idx);
     updateEnvironment("obstacles", next);
     setObstaclesDraft(next.join(", "));
+    clearMissions();
   };
 
   const removeEquipment = (idx: number) => {
@@ -419,6 +477,7 @@ export default function Home() {
     const next = extractedContext.equipmentAvailable.filter((_, i) => i !== idx);
     updateField("equipmentAvailable", next);
     setEquipmentDraft(next.join(", "));
+    clearMissions();
   };
 
   const inputCls =
@@ -438,7 +497,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 flex flex-col items-center">
-      <div className="w-full max-w-2xl space-y-6">
+      <div className={`w-full ${generatedMissions.length === 3 ? "max-w-4xl" : "max-w-2xl"} space-y-6 transition-all duration-300`}>
 
         {/* Hidden File Inputs for Standard Camera & Gallery Browsing */}
         <input
@@ -493,7 +552,10 @@ export default function Home() {
                 id="activity-request"
                 rows={3}
                 value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
+                onChange={(e) => {
+                  setInputText(e.target.value);
+                  clearMissions();
+                }}
                 placeholder="We are 6 people, have 15 minutes, and want something fun and active..."
                 disabled={loading || isRecording || isTranscribing}
                 className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-800/50 px-4 py-3 text-sm focus:border-emerald-500 focus:bg-white dark:focus:bg-zinc-800 focus:ring-2 focus:ring-emerald-500/20 outline-none transition disabled:opacity-50 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 resize-y"
@@ -1307,6 +1369,45 @@ export default function Home() {
               </details>
             </div>
 
+            {/* 4. Generate Missions CTA */}
+            <div className="p-5 bg-gradient-to-b from-white to-emerald-50/40 dark:from-zinc-900 dark:to-emerald-950/20 border-t border-zinc-100 dark:border-zinc-800 flex flex-col items-center gap-3">
+              <button
+                id="generate-missions-btn"
+                type="button"
+                onClick={handleGenerateMissions}
+                disabled={isGeneratingMissions}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isGeneratingMissions ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                    </svg>
+                    <span>Creating your missions...</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-base">✨</span>
+                    <span>Generate Missions</span>
+                  </>
+                )}
+              </button>
+
+              {missionGenerationError && (
+                <div className="w-full p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-800 dark:text-amber-300 flex items-center justify-between gap-2">
+                  <span>{missionGenerationError}</span>
+                  <button
+                    type="button"
+                    onClick={handleGenerateMissions}
+                    className="font-semibold underline hover:no-underline text-amber-900 dark:text-amber-200 cursor-pointer"
+                  >
+                    Try Again
+                  </button>
+                </div>
+              )}
+            </div>
+
             {/* Developer Details (Raw JSON - Collapsible & Unobtrusive) */}
             <div className="p-4 bg-zinc-50/80 dark:bg-zinc-950/60 border-t border-zinc-100 dark:border-zinc-800">
               <details className="text-xs text-zinc-400 group">
@@ -1316,9 +1417,242 @@ export default function Home() {
                 <pre className="mt-2 p-3 bg-zinc-100 dark:bg-zinc-950 rounded-xl border border-zinc-200/80 dark:border-zinc-850 overflow-x-auto font-mono text-[11px] text-zinc-700 dark:text-zinc-300">
                   {JSON.stringify(extractedContext, null, 2)}
                 </pre>
+                {missionLatencyMs !== null && (
+                  <p className="mt-2 text-[11px] font-mono text-zinc-500">
+                    ⚡ Mission generation latency: {(missionLatencyMs / 1000).toFixed(2)}s (model: gemini-3.1-flash-lite)
+                  </p>
+                )}
               </details>
             </div>
           </div>
+        )}
+
+        {/* 3 Mission Selection Cards */}
+        {generatedMissions.length === 3 && !selectedMission && (
+          <section id="mission-selection-section" className="space-y-4 pt-2">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <h2 className="text-xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50 flex items-center gap-2">
+                  <span>🎯</span>
+                  <span>Choose Your Outventure</span>
+                </h2>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                  Pick one of your 3 tailored missions — all instructions and safety notes are ready.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {missionLatencyMs !== null && (
+                  <span className="text-xs font-mono text-zinc-400 dark:text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded border border-zinc-200 dark:border-zinc-700">
+                    ⚡ {(missionLatencyMs / 1000).toFixed(2)}s
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={handleGenerateMissions}
+                  disabled={isGeneratingMissions}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 transition cursor-pointer disabled:opacity-50"
+                  title="Generate 3 fresh missions using current details"
+                >
+                  <span>🔄</span>
+                  <span>Regenerate</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {generatedMissions.map((mission, idx) => (
+                <div
+                  key={mission.id || idx}
+                  className="flex flex-col justify-between bg-white dark:bg-zinc-900 p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 hover:border-emerald-500/60 dark:hover:border-emerald-500/60 transition shadow-xs hover:shadow-md group"
+                >
+                  <div className="space-y-3">
+                    {/* Header badge */}
+                    <div className="flex items-center justify-between">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/70">
+                        Option {idx + 1}
+                      </span>
+                      <span className="text-xs font-medium text-zinc-400 capitalize">
+                        {mission.intensity} intensity
+                      </span>
+                    </div>
+
+                    {/* Title */}
+                    <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                      {mission.title}
+                    </h3>
+
+                    {/* Short Description */}
+                    <p className="text-xs text-zinc-600 dark:text-zinc-300 line-clamp-3 leading-relaxed">
+                      {mission.shortDescription}
+                    </p>
+
+                    {/* Metadata Badges */}
+                    <div className="flex flex-wrap gap-1.5 pt-1 text-[11px]">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-medium">
+                        ⏱️ {mission.durationMinutes} min
+                      </span>
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-medium">
+                        👥 {mission.players}
+                      </span>
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-medium">
+                        🎒 {mission.equipmentNeeded.length > 0 ? mission.equipmentNeeded.join(", ") : "No gear needed"}
+                      </span>
+                    </div>
+
+                    {/* Why this fits snippet */}
+                    {mission.whyItFits && (
+                      <p className="text-[11px] text-zinc-400 dark:text-zinc-500 italic line-clamp-2 pt-1 border-t border-zinc-100 dark:border-zinc-800/80">
+                        &ldquo;{mission.whyItFits}&rdquo;
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Card Action */}
+                  <div className="pt-4 mt-2">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedMission(mission)}
+                      className="w-full inline-flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl text-xs font-bold bg-zinc-900 dark:bg-zinc-100 hover:bg-emerald-600 dark:hover:bg-emerald-500 text-white dark:text-zinc-900 hover:text-white dark:hover:text-white transition shadow-xs cursor-pointer"
+                    >
+                      <span>Choose Mission</span>
+                      <span>→</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Selected Mission Detailed View */}
+        {selectedMission && (
+          <section id="mission-detail-view" className="space-y-5">
+            {/* Back Button */}
+            <button
+              type="button"
+              onClick={() => setSelectedMission(null)}
+              className="inline-flex items-center gap-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 cursor-pointer transition"
+            >
+              <span>←</span>
+              <span>Back to Missions</span>
+            </button>
+
+            {/* Mission Details Card */}
+            <div className="bg-white dark:bg-zinc-900 p-6 sm:p-8 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 space-y-6">
+              {/* Header */}
+              <div className="space-y-3 pb-5 border-b border-zinc-100 dark:border-zinc-800">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800/80 text-xs font-bold text-emerald-700 dark:text-emerald-300">
+                    <span>Active Mission</span>
+                  </span>
+                  <span className="text-xs font-medium text-zinc-400 capitalize">
+                    {selectedMission.intensity} Intensity
+                  </span>
+                </div>
+
+                <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">
+                  {selectedMission.title}
+                </h2>
+
+                <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                  {selectedMission.shortDescription}
+                </p>
+
+                {/* Badges */}
+                <div className="flex flex-wrap gap-2 pt-1 text-xs">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-semibold">
+                    ⏱️ {selectedMission.durationMinutes} minutes
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-semibold">
+                    👥 {selectedMission.players}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-semibold">
+                    ⚡ {selectedMission.intensity.toUpperCase()}
+                  </span>
+                </div>
+              </div>
+
+              {/* Why this fits */}
+              {selectedMission.whyItFits && (
+                <div className="p-4 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-900/40 space-y-1">
+                  <h4 className="text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
+                    Why this fits your group & surroundings
+                  </h4>
+                  <p className="text-xs text-emerald-900 dark:text-emerald-200 leading-relaxed">
+                    {selectedMission.whyItFits}
+                  </p>
+                </div>
+              )}
+
+              {/* What you'll need */}
+              <div className="space-y-2">
+                <h4 className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                  What you&apos;ll need
+                </h4>
+                {selectedMission.equipmentNeeded.length > 0 ? (
+                  <ul className="flex flex-wrap gap-2">
+                    {selectedMission.equipmentNeeded.map((eq, i) => (
+                      <li
+                        key={i}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800"
+                      >
+                        <span>🎒</span>
+                        <span>{eq}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 italic">
+                    ✨ No equipment needed — only your surroundings and group.
+                  </p>
+                )}
+              </div>
+
+              {/* How to do it (Steps) */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                  How to do it
+                </h4>
+                <ol className="space-y-2.5">
+                  {selectedMission.steps.map((step, idx) => (
+                    <li
+                      key={idx}
+                      className="flex items-start gap-3 p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/60 dark:border-zinc-800"
+                    >
+                      <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-emerald-600 text-white text-xs font-bold mt-0.5">
+                        {idx + 1}
+                      </span>
+                      <p className="text-xs text-zinc-800 dark:text-zinc-200 leading-relaxed pt-0.5">
+                        {step}
+                      </p>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+
+              {/* Safety Notes */}
+              {selectedMission.safetyNotes.length > 0 && (
+                <div className="space-y-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                  <h4 className="text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <span>🛡️</span>
+                    <span>Stay Safe</span>
+                  </h4>
+                  <ul className="space-y-1.5">
+                    {selectedMission.safetyNotes.map((note, idx) => (
+                      <li
+                        key={idx}
+                        className="text-xs text-zinc-600 dark:text-zinc-400 flex items-start gap-2"
+                      >
+                        <span className="text-amber-500 mt-0.5 font-bold">•</span>
+                        <span>{note}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </section>
         )}
       </div>
     </main>

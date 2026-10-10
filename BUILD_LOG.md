@@ -1154,3 +1154,67 @@ Example response:
   "success": true,
   "text": "We are four people and have twenty minutes."
 }
+
+
+# Phase 4 — Mission Generation, Selection & Detail View
+
+**Status:** Completed
+
+## Goal
+
+Phase 4 introduced the core mission-generation experience for Outventure AI.
+
+The completed flow is:
+
+**Confirmed MissionContext**
+→ **Generate Missions**
+→ **Gemini 3.1 Flash Lite generates exactly 3 complete missions**
+→ **3 mission cards are displayed**
+→ **user selects one**
+→ **full mission detail view is shown**
+
+The selected mission does not require another AI request.
+
+All card summaries, detailed steps, safety notes, and supporting metadata are generated in one request and stored in client state.
+
+---
+
+## Production Model Decision
+
+Mission generation uses:
+
+`gemini-3.1-flash-lite`
+
+This model was selected after controlled benchmarking against:
+
+`gemma-4-26b-a4b-it`
+
+Gemini Flash Lite provided substantially lower latency while maintaining equal or better practical mission quality, constraint adherence, and structured JSON reliability.
+
+Gemma is not used in the production mission-generation flow.
+
+---
+
+## Mission Schema
+
+A production `Mission` type was introduced:
+
+```ts
+export type MissionIntensity = "low" | "medium" | "high";
+
+export type Mission = {
+  id: string;
+  title: string;
+  shortDescription: string;
+  durationMinutes: number;
+  intensity: MissionIntensity;
+  players: string;
+  equipmentNeeded: string[];
+  whyItFits: string;
+  steps: string[];
+  safetyNotes: string[];
+};
+
+export type MissionGenerationResponse = {
+  missions: Mission[];
+};

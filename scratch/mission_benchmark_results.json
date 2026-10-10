@@ -1,0 +1,1264 @@
+[
+  {
+    "model": "gemini-3.1-flash-lite",
+    "round": 1,
+    "contextId": 1,
+    "contextName": "Friend Group / Football Field",
+    "latencyMs": 9169,
+    "latencySeconds": 9.17,
+    "success": true,
+    "error": null,
+    "parseSuccess": true,
+    "isDirectJson": true,
+    "missionCount": 3,
+    "missions": [
+      {
+        "id": "mission-1",
+        "title": "Three-Touch Precision Relay",
+        "shortDescription": "A technical relay race focusing on control and coordination rather than pure speed.",
+        "durationMinutes": 25,
+        "intensity": "medium",
+        "players": "6 people (split into 2 teams of 3)",
+        "equipmentNeeded": [
+          "soccer ball"
+        ],
+        "whyItFits": "Uses the large field space and the single ball to create a fast-paced team competition.",
+        "steps": [
+          "Divide the 6 participants into two teams of three at opposite ends of the field.",
+          "On 'Go', the first player from each team must dribble the ball to the center line using exactly three touches, then pass it to their teammate who continues the pattern.",
+          "The team that successfully cycles all members through the center line and back to the start line first wins.",
+          "Reset and play best-of-three rounds to reach the 25-minute mark."
+        ],
+        "safetyNotes": [
+          "Ensure players maintain distance to avoid collisions on the grass surface.",
+          "Warm up ankles and calves before starting to prevent strains on the uneven grass."
+        ]
+      },
+      {
+        "id": "mission-2",
+        "title": "Field-Marking Keep Away",
+        "shortDescription": "A tactical game of keep-away utilizing the existing field lines as safe zones.",
+        "durationMinutes": 25,
+        "intensity": "medium",
+        "players": "6 people (3 vs 3)",
+        "equipmentNeeded": [
+          "soccer ball"
+        ],
+        "whyItFits": "Leverages the field markings to create defined zones for objective-based gameplay.",
+        "steps": [
+          "Create a 3v3 match where points are only scored if a team completes 5 consecutive passes while remaining within the marked field boundaries.",
+          "If the ball goes out of bounds or is intercepted, possession switches immediately.",
+          "Players must stay within the marked area; if they step outside, possession is turned over to the opposing team.",
+          "Rotate teams every 8 minutes to keep energy levels balanced."
+        ],
+        "safetyNotes": [
+          "Watch for divots or holes in the grass that could cause rolled ankles.",
+          "Players should communicate loudly when moving to avoid body contact."
+        ]
+      },
+      {
+        "id": "mission-3",
+        "title": "Target Accuracy Challenge",
+        "shortDescription": "A collaborative accuracy game where players attempt to land the ball on specific field markers.",
+        "durationMinutes": 25,
+        "intensity": "medium",
+        "players": "6 people (individual scoring)",
+        "equipmentNeeded": [
+          "soccer ball"
+        ],
+        "whyItFits": "Utilizes the field markings as targets and creates a fun, low-impact, high-focus challenge.",
+        "steps": [
+          "Identify three specific field markings (e.g., center circle point, penalty spot, corner arc) as targets.",
+          "Each player takes 3 turns attempting to stop the ball exactly on a target from a set distance.",
+          "Points are awarded based on how close the ball rests to the center of the target marking.",
+          "The group tracks cumulative scores to see who is the 'Field Sniper' by the end of 25 minutes."
+        ],
+        "safetyNotes": [
+          "Do not kick the ball at other players; maintain a clear field of vision.",
+          "Ensure participants wait for the ball to stop rolling before retrieving it to avoid slips."
+        ]
+      }
+    ],
+    "rawText": "{\n  \"missions\": [\n    {\n      \"id\": \"mission-1\",\n      \"title\": \"Three-Touch Precision Relay\",\n      \"shortDescription\": \"A technical relay race focusing on control and coordination rather than pure speed.\",\n      \"durationMinutes\": 25,\n      \"intensity\": \"medium\",\n      \"players\": \"6 people (split into 2 teams of 3)\",\n      \"equipmentNeeded\": [\n        \"soccer ball\"\n      ],\n      \"whyItFits\": \"Uses the large field space and the single ball to create a fast-paced team competition.\",\n      \"steps\": [\n        \"Divide the 6 participants into two teams of three at opposite ends of the field.\",\n        \"On 'Go', the first player from each team must dribble the ball to the center line using exactly three touches, then pass it to their teammate who continues the pattern.\",\n        \"The team that successfully cycles all members through the center line and back to the start line first wins.\",\n        \"Reset and play best-of-three rounds to reach the 25-minute mark.\"\n      ],\n      \"safetyNotes\": [\n        \"Ensure players maintain distance to avoid collisions on the grass surface.\",\n        \"Warm up ankles and calves before starting to prevent strains on the uneven grass.\"\n      ]\n    },\n    {\n      \"id\": \"mission-2\",\n      \"title\": \"Field-Marking Keep Away\",\n      \"shortDescription\": \"A tactical game of keep-away utilizing the existing field lines as safe zones.\",\n      \"durationMinutes\": 25,\n      \"intensity\": \"medium\",\n      \"players\": \"6 people (3 vs 3)\",\n      \"equipmentNeeded\": [\n        \"soccer ball\"\n      ],\n      \"whyItFits\": \"Leverages the field markings to create defined zones for objective-based gameplay.\",\n      \"steps\": [\n        \"Create a 3v3 match where points are only scored if a team completes 5 consecutive passes while remaining within the marked field boundaries.\",\n        \"If the ball goes out of bounds or is intercepted, possession switches immediately.\",\n        \"Players must stay within the marked area; if they step outside, possession is turned over to the opposing team.\",\n        \"Rotate teams every 8 minutes to keep energy levels balanced.\"\n      ],\n      \"safetyNotes\": [\n        \"Watch for divots or holes in the grass that could cause rolled ankles.\",\n        \"Players should communicate loudly when moving to avoid body contact.\"\n      ]\n    },\n    {\n      \"id\": \"mission-3\",\n      \"title\": \"Target Accuracy Challenge\",\n      \"shortDescription\": \"A collaborative accuracy game where players attempt to land the ball on specific field markers.\",\n      \"durationMinutes\": 25,\n      \"intensity\": \"medium\",\n      \"players\": \"6 people (individual scoring)\",\n      \"equipmentNeeded\": [\n        \"soccer ball\"\n      ],\n      \"whyItFits\": \"Utilizes the field markings as targets and creates a fun, low-impact, high-focus challenge.\",\n      \"steps\": [\n        \"Identify three specific field markings (e.g., center circle point, penalty spot, corner arc) as targets.\",\n        \"Each player takes 3 turns attempting to stop the ball exactly on a target from a set distance.\",\n        \"Points are awarded based on how close the ball rests to the center of the target marking.\",\n        \"The group tracks cumulative scores to see who is the 'Field Sniper' by the end of 25 minutes.\"\n      ],\n      \"safetyNotes\": [\n        \"Do not kick the ball at other players; maintain a clear field of vision.\",\n        \"Ensure participants wait for the ball to stop rolling before retrieving it to avoid slips.\"\n      ]\n    }\n  ]\n}"
+  },
+  {
+    "model": "gemini-3.1-flash-lite",
+    "round": 1,
+    "contextId": 2,
+    "contextName": "Solo Relaxing Outdoor",
+    "latencyMs": 7697,
+    "latencySeconds": 7.7,
+    "success": true,
+    "error": null,
+    "parseSuccess": true,
+    "isDirectJson": true,
+    "missionCount": 3,
+    "missions": [
+      {
+        "id": "mission-1",
+        "title": "Cloud-Gazer's Horizon Scan",
+        "shortDescription": "A meditative visual exploration of the sky and the open grassy landscape.",
+        "durationMinutes": 20,
+        "intensity": "low",
+        "players": "1 adult",
+        "equipmentNeeded": [],
+        "whyItFits": "Perfectly utilizes the large open space to provide an unobstructed view for a relaxing, quiet mental break.",
+        "steps": [
+          "Find a comfortable spot on the grass, ideally where the gentle slope allows you to lie back or recline safely.",
+          "Begin by scanning the horizon from left to right, identifying three distinct textures or colors in the grass before shifting your gaze upward.",
+          "Spend the remaining time observing cloud formations, silently narrating their shifting shapes to yourself to practice mindful observation."
+        ],
+        "safetyNotes": [
+          "Check the grass for hidden insects or damp patches before settling down.",
+          "Be aware of your surroundings even while reclining to ensure no one approaches unexpectedly."
+        ]
+      },
+      {
+        "id": "mission-2",
+        "title": "The Gentle Gradient Walk",
+        "shortDescription": "A slow, deliberate walking meditation focusing on the sensation of movement on a slope.",
+        "durationMinutes": 20,
+        "intensity": "low",
+        "players": "1 adult",
+        "equipmentNeeded": [],
+        "whyItFits": "Uses the gentle grassy slope feature to provide a natural physical challenge that encourages slow, mindful movement.",
+        "steps": [
+          "Begin at the bottom of the grassy slope, standing perfectly still for one minute to center your breathing.",
+          "Walk upward at an intentionally slow pace, focusing entirely on how your weight shifts from heel to toe as the incline changes.",
+          "Once at the top, turn and slowly descend, mirroring the same careful foot placement to maintain balance and focus."
+        ],
+        "safetyNotes": [
+          "Wear stable footwear to avoid slipping on grass, especially if it is slightly uneven.",
+          "Walk at a pace that keeps your balance secure; do not attempt this if the ground is slick."
+        ]
+      },
+      {
+        "id": "mission-3",
+        "title": "Natural Soundscape Tuning",
+        "shortDescription": "A quiet auditory grounding exercise that uses the scale of the environment to filter ambient noise.",
+        "durationMinutes": 20,
+        "intensity": "low",
+        "players": "1 adult",
+        "equipmentNeeded": [],
+        "whyItFits": "Leverages the large, open, quiet environment to help you isolate natural sounds from a distance.",
+        "steps": [
+          "Walk to the center of the open grassy area and stand or sit in a comfortable, still position.",
+          "Close your eyes and identify the most distant sound you can hear, focusing on it for three minutes.",
+          "Shift your focus to the closest sound near your immediate vicinity, then spend the final segment trying to distinguish layers of sounds simultaneously."
+        ],
+        "safetyNotes": [
+          "Remain stationary or move very slowly while eyes are closed to avoid tripping on uneven ground.",
+          "Stay alert to your immediate area; keep one ear 'open' to your surroundings at all times."
+        ]
+      }
+    ],
+    "rawText": "{\n  \"missions\": [\n    {\n      \"id\": \"mission-1\",\n      \"title\": \"Cloud-Gazer's Horizon Scan\",\n      \"shortDescription\": \"A meditative visual exploration of the sky and the open grassy landscape.\",\n      \"durationMinutes\": 20,\n      \"intensity\": \"low\",\n      \"players\": \"1 adult\",\n      \"equipmentNeeded\": [],\n      \"whyItFits\": \"Perfectly utilizes the large open space to provide an unobstructed view for a relaxing, quiet mental break.\",\n      \"steps\": [\n        \"Find a comfortable spot on the grass, ideally where the gentle slope allows you to lie back or recline safely.\",\n        \"Begin by scanning the horizon from left to right, identifying three distinct textures or colors in the grass before shifting your gaze upward.\",\n        \"Spend the remaining time observing cloud formations, silently narrating their shifting shapes to yourself to practice mindful observation.\"\n      ],\n      \"safetyNotes\": [\n        \"Check the grass for hidden insects or damp patches before settling down.\",\n        \"Be aware of your surroundings even while reclining to ensure no one approaches unexpectedly.\"\n      ]\n    },\n    {\n      \"id\": \"mission-2\",\n      \"title\": \"The Gentle Gradient Walk\",\n      \"shortDescription\": \"A slow, deliberate walking meditation focusing on the sensation of movement on a slope.\",\n      \"durationMinutes\": 20,\n      \"intensity\": \"low\",\n      \"players\": \"1 adult\",\n      \"equipmentNeeded\": [],\n      \"whyItFits\": \"Uses the gentle grassy slope feature to provide a natural physical challenge that encourages slow, mindful movement.\",\n      \"steps\": [\n        \"Begin at the bottom of the grassy slope, standing perfectly still for one minute to center your breathing.\",\n        \"Walk upward at an intentionally slow pace, focusing entirely on how your weight shifts from heel to toe as the incline changes.\",\n        \"Once at the top, turn and slowly descend, mirroring the same careful foot placement to maintain balance and focus.\"\n      ],\n      \"safetyNotes\": [\n        \"Wear stable footwear to avoid slipping on grass, especially if it is slightly uneven.\",\n        \"Walk at a pace that keeps your balance secure; do not attempt this if the ground is slick.\"\n      ]\n    },\n    {\n      \"id\": \"mission-3\",\n      \"title\": \"Natural Soundscape Tuning\",\n      \"shortDescription\": \"A quiet auditory grounding exercise that uses the scale of the environment to filter ambient noise.\",\n      \"durationMinutes\": 20,\n      \"intensity\": \"low\",\n      \"players\": \"1 adult\",\n      \"equipmentNeeded\": [],\n      \"whyItFits\": \"Leverages the large, open, quiet environment to help you isolate natural sounds from a distance.\",\n      \"steps\": [\n        \"Walk to the center of the open grassy area and stand or sit in a comfortable, still position.\",\n        \"Close your eyes and identify the most distant sound you can hear, focusing on it for three minutes.\",\n        \"Shift your focus to the closest sound near your immediate vicinity, then spend the final segment trying to distinguish layers of sounds simultaneously.\"\n      ],\n      \"safetyNotes\": [\n        \"Remain stationary or move very slowly while eyes are closed to avoid tripping on uneven ground.\",\n        \"Stay alert to your immediate area; keep one ear 'open' to your surroundings at all times.\"\n      ]\n    }\n  ]\n}"
+  },
+  {
+    "model": "gemini-3.1-flash-lite",
+    "round": 1,
+    "contextId": 3,
+    "contextName": "Kids / Playground",
+    "latencyMs": 5612,
+    "latencySeconds": 5.61,
+    "success": true,
+    "error": null,
+    "parseSuccess": true,
+    "isDirectJson": true,
+    "missionCount": 3,
+    "missions": [
+      {
+        "id": "mission-1",
+        "title": "The Playground Architect Challenge",
+        "shortDescription": "Collaboratively design a 'dream' playground modification using only the existing structure.",
+        "durationMinutes": 30,
+        "intensity": "medium",
+        "players": "5 participants (mixed adults and kids)",
+        "equipmentNeeded": [],
+        "whyItFits": "Uses the wooden structure and slides without requiring extra props, encouraging communication and physical exploration.",
+        "steps": [
+          "Divide into two teams: the Designers and the Engineers.",
+          "Walk around the wooden play structure and identify two specific areas to 'upgrade' using only your imagination.",
+          "Take turns demonstrating how your upgrades would function on the existing slides and swings.",
+          "The whole group votes on the most creative addition to the playground layout."
+        ],
+        "safetyNotes": [
+          "Ensure kids stay on stable ground and do not climb outside the designated play areas.",
+          "Check for splinters or loose connections on the wooden structure before touching."
+        ]
+      },
+      {
+        "id": "mission-2",
+        "title": "Nature Statue Garden",
+        "shortDescription": "Create a series of frozen poses based on themes, utilizing the playground features as props.",
+        "durationMinutes": 30,
+        "intensity": "medium",
+        "players": "5 participants (mixed adults and kids)",
+        "equipmentNeeded": [],
+        "whyItFits": "Utilizes the slides and swings as stable posing platforms, keeping activity level consistent for all ages.",
+        "steps": [
+          "One person is the 'Gallery Curator' who calls out a theme (e.g., 'Wildlife', 'History', or 'Space').",
+          "The other 4 participants have 60 seconds to arrange themselves on or near the play structure into a themed frozen pose.",
+          "The Curator moves around the group to inspect the 'exhibit' and provides a score.",
+          "Rotate the Curator role so everyone gets a chance to lead the gallery."
+        ],
+        "safetyNotes": [
+          "Avoid climbing on top of swings or structures where balance is precarious.",
+          "Ensure all poses are feet-on-the-ground or securely seated to prevent falls from height."
+        ]
+      },
+      {
+        "id": "mission-3",
+        "title": "The Grassland Explorer Quest",
+        "shortDescription": "Engage in a structured observation game, searching for specific textures and shapes within the playground environment.",
+        "durationMinutes": 30,
+        "intensity": "medium",
+        "players": "5 participants (mixed adults and kids)",
+        "equipmentNeeded": [],
+        "whyItFits": "Focuses on the open grass area and the textures of the wooden play structure, keeping players moving at a controlled pace.",
+        "steps": [
+          "The group agrees on 5 categories of things to find (e.g., 'something fuzzy', 'something wooden', 'a circular shape', 'a shadow', 'a straight line').",
+          "Participants scatter to different points in the playground to find an item or feature that matches a category.",
+          "Everyone returns to the center to present their findings and explain why it fits the category.",
+          "Groups take turns being the 'Quest Master' who selects the next set of categories."
+        ],
+        "safetyNotes": [
+          "Watch for uneven patches in the grass to prevent tripping.",
+          "Respect boundaries of the playground to ensure kids remain in sight at all times."
+        ]
+      }
+    ],
+    "rawText": "{\n  \"missions\": [\n    {\n      \"id\": \"mission-1\",\n      \"title\": \"The Playground Architect Challenge\",\n      \"shortDescription\": \"Collaboratively design a 'dream' playground modification using only the existing structure.\",\n      \"durationMinutes\": 30,\n      \"intensity\": \"medium\",\n      \"players\": \"5 participants (mixed adults and kids)\",\n      \"equipmentNeeded\": [],\n      \"whyItFits\": \"Uses the wooden structure and slides without requiring extra props, encouraging communication and physical exploration.\",\n      \"steps\": [\n        \"Divide into two teams: the Designers and the Engineers.\",\n        \"Walk around the wooden play structure and identify two specific areas to 'upgrade' using only your imagination.\",\n        \"Take turns demonstrating how your upgrades would function on the existing slides and swings.\",\n        \"The whole group votes on the most creative addition to the playground layout.\"\n      ],\n      \"safetyNotes\": [\n        \"Ensure kids stay on stable ground and do not climb outside the designated play areas.\",\n        \"Check for splinters or loose connections on the wooden structure before touching.\"\n      ]\n    },\n    {\n      \"id\": \"mission-2\",\n      \"title\": \"Nature Statue Garden\",\n      \"shortDescription\": \"Create a series of frozen poses based on themes, utilizing the playground features as props.\",\n      \"durationMinutes\": 30,\n      \"intensity\": \"medium\",\n      \"players\": \"5 participants (mixed adults and kids)\",\n      \"equipmentNeeded\": [],\n      \"whyItFits\": \"Utilizes the slides and swings as stable posing platforms, keeping activity level consistent for all ages.\",\n      \"steps\": [\n        \"One person is the 'Gallery Curator' who calls out a theme (e.g., 'Wildlife', 'History', or 'Space').\",\n        \"The other 4 participants have 60 seconds to arrange themselves on or near the play structure into a themed frozen pose.\",\n        \"The Curator moves around the group to inspect the 'exhibit' and provides a score.\",\n        \"Rotate the Curator role so everyone gets a chance to lead the gallery.\"\n      ],\n      \"safetyNotes\": [\n        \"Avoid climbing on top of swings or structures where balance is precarious.\",\n        \"Ensure all poses are feet-on-the-ground or securely seated to prevent falls from height.\"\n      ]\n    },\n    {\n      \"id\": \"mission-3\",\n      \"title\": \"The Grassland Explorer Quest\",\n      \"shortDescription\": \"Engage in a structured observation game, searching for specific textures and shapes within the playground environment.\",\n      \"durationMinutes\": 30,\n      \"intensity\": \"medium\",\n      \"players\": \"5 participants (mixed adults and kids)\",\n      \"equipmentNeeded\": [],\n      \"whyItFits\": \"Focuses on the open grass area and the textures of the wooden play structure, keeping players moving at a controlled pace.\",\n      \"steps\": [\n        \"The group agrees on 5 categories of things to find (e.g., 'something fuzzy', 'something wooden', 'a circular shape', 'a shadow', 'a straight line').\",\n        \"Participants scatter to different points in the playground to find an item or feature that matches a category.\",\n        \"Everyone returns to the center to present their findings and explain why it fits the category.\",\n        \"Groups take turns being the 'Quest Master' who selects the next set of categories.\"\n      ],\n      \"safetyNotes\": [\n        \"Watch for uneven patches in the grass to prevent tripping.\",\n        \"Respect boundaries of the playground to ensure kids remain in sight at all times.\"\n      ]\n    }\n  ]\n}"
+  },
+  {
+    "model": "gemini-3.1-flash-lite",
+    "round": 1,
+    "contextId": 4,
+    "contextName": "Indoor Quiet Group",
+    "latencyMs": 7107,
+    "latencySeconds": 7.11,
+    "success": true,
+    "error": null,
+    "parseSuccess": true,
+    "isDirectJson": true,
+    "missionCount": 3,
+    "missions": [
+      {
+        "id": "mission-1",
+        "title": "Silent Echoes Collaborative Sculpture",
+        "shortDescription": "Create a shared, ephemeral art piece using only the bodies of the group members.",
+        "durationMinutes": 15,
+        "intensity": "low",
+        "players": "4 adults",
+        "equipmentNeeded": [],
+        "whyItFits": "Utilizes the open floor space for a quiet, collaborative task without needing any tools.",
+        "steps": [
+          "One person starts as the 'Sculptor' and others act as 'Statues'.",
+          "The Sculptor poses the other three participants into a linked, artistic human structure without speaking.",
+          "Participants must hold the pose silently for 60 seconds while the Sculptor rotates around to view it from all angles.",
+          "Rotate the role of Sculptor until everyone has had a turn to lead the design."
+        ],
+        "safetyNotes": [
+          "Ensure participants are stable on the wood floor before letting go of hands.",
+          "Do not attempt any pose that causes physical strain or requires balancing on another person's back or shoulders.",
+          "Maintain slow, deliberate movements to avoid slips."
+        ]
+      },
+      {
+        "id": "mission-2",
+        "title": "Architectural History Retrospective",
+        "shortDescription": "A conversational exploration of the room's features and design.",
+        "durationMinutes": 15,
+        "intensity": "low",
+        "players": "4 adults",
+        "equipmentNeeded": [],
+        "whyItFits": "Engages the walls and room features through social interaction, perfectly fitting the quiet and indoor constraints.",
+        "steps": [
+          "Divide the room into four zones, one for each player.",
+          "Each player takes 3 minutes to 'curate' their zone, pointing out specific features of the wood floor or walls and inventing a fictional, humorous history for why that part of the room exists.",
+          "The group walks slowly from zone to zone as a tour group, listening to the narrator of that section.",
+          "Finish with a silent vote on which 'historical feature' was the most believable."
+        ],
+        "safetyNotes": [
+          "Walk at a slow pace while touring the room.",
+          "Respect the boundaries of the walls and do not lean heavily against them if structural stability is unknown.",
+          "Be mindful of socks on wood floors, which can be slippery."
+        ]
+      },
+      {
+        "id": "mission-3",
+        "title": "The Whispered Synchronicity Challenge",
+        "shortDescription": "A test of non-verbal coordination and movement patterns.",
+        "durationMinutes": 15,
+        "intensity": "low",
+        "players": "4 adults",
+        "equipmentNeeded": [],
+        "whyItFits": "Focuses on rhythmic, quiet movement within the available floor space.",
+        "steps": [
+          "The group stands in a loose circle in the center of the room.",
+          "One player initiates a slow, repetitive hand or arm gesture.",
+          "The others must observe and mimic the gesture simultaneously, focusing on achieving perfect synchronization.",
+          "The group moves slowly across the floor together while maintaining the synchronized gesture, turning the group into a moving unit.",
+          "Switch the 'initiator' every few minutes to change the pattern."
+        ],
+        "safetyNotes": [
+          "Maintain enough distance between participants to avoid accidental contact during gestures.",
+          "Ensure the floor path is clear of debris to prevent trips while focusing on synchronization.",
+          "Move at a slow, walking pace only."
+        ]
+      }
+    ],
+    "rawText": "{\n  \"missions\": [\n    {\n      \"id\": \"mission-1\",\n      \"title\": \"Silent Echoes Collaborative Sculpture\",\n      \"shortDescription\": \"Create a shared, ephemeral art piece using only the bodies of the group members.\",\n      \"durationMinutes\": 15,\n      \"intensity\": \"low\",\n      \"players\": \"4 adults\",\n      \"equipmentNeeded\": [],\n      \"whyItFits\": \"Utilizes the open floor space for a quiet, collaborative task without needing any tools.\",\n      \"steps\": [\n        \"One person starts as the 'Sculptor' and others act as 'Statues'.\",\n        \"The Sculptor poses the other three participants into a linked, artistic human structure without speaking.\",\n        \"Participants must hold the pose silently for 60 seconds while the Sculptor rotates around to view it from all angles.\",\n        \"Rotate the role of Sculptor until everyone has had a turn to lead the design.\"\n      ],\n      \"safetyNotes\": [\n        \"Ensure participants are stable on the wood floor before letting go of hands.\",\n        \"Do not attempt any pose that causes physical strain or requires balancing on another person's back or shoulders.\",\n        \"Maintain slow, deliberate movements to avoid slips.\"\n      ]\n    },\n    {\n      \"id\": \"mission-2\",\n      \"title\": \"Architectural History Retrospective\",\n      \"shortDescription\": \"A conversational exploration of the room's features and design.\",\n      \"durationMinutes\": 15,\n      \"intensity\": \"low\",\n      \"players\": \"4 adults\",\n      \"equipmentNeeded\": [],\n      \"whyItFits\": \"Engages the walls and room features through social interaction, perfectly fitting the quiet and indoor constraints.\",\n      \"steps\": [\n        \"Divide the room into four zones, one for each player.\",\n        \"Each player takes 3 minutes to 'curate' their zone, pointing out specific features of the wood floor or walls and inventing a fictional, humorous history for why that part of the room exists.\",\n        \"The group walks slowly from zone to zone as a tour group, listening to the narrator of that section.\",\n        \"Finish with a silent vote on which 'historical feature' was the most believable.\"\n      ],\n      \"safetyNotes\": [\n        \"Walk at a slow pace while touring the room.\",\n        \"Respect the boundaries of the walls and do not lean heavily against them if structural stability is unknown.\",\n        \"Be mindful of socks on wood floors, which can be slippery.\"\n      ]\n    },\n    {\n      \"id\": \"mission-3\",\n      \"title\": \"The Whispered Synchronicity Challenge\",\n      \"shortDescription\": \"A test of non-verbal coordination and movement patterns.\",\n      \"durationMinutes\": 15,\n      \"intensity\": \"low\",\n      \"players\": \"4 adults\",\n      \"equipmentNeeded\": [],\n      \"whyItFits\": \"Focuses on rhythmic, quiet movement within the available floor space.\",\n      \"steps\": [\n        \"The group stands in a loose circle in the center of the room.\",\n        \"One player initiates a slow, repetitive hand or arm gesture.\",\n        \"The others must observe and mimic the gesture simultaneously, focusing on achieving perfect synchronization.\",\n        \"The group moves slowly across the floor together while maintaining the synchronized gesture, turning the group into a moving unit.\",\n        \"Switch the 'initiator' every few minutes to change the pattern.\"\n      ],\n      \"safetyNotes\": [\n        \"Maintain enough distance between participants to avoid accidental contact during gestures.\",\n        \"Ensure the floor path is clear of debris to prevent trips while focusing on synchronization.\",\n        \"Move at a slow, walking pace only.\"\n      ]\n    }\n  ]\n}"
+  },
+  {
+    "model": "gemini-3.1-flash-lite",
+    "round": 2,
+    "contextId": 1,
+    "contextName": "Friend Group / Football Field",
+    "latencyMs": 7509,
+    "latencySeconds": 7.51,
+    "success": true,
+    "error": null,
+    "parseSuccess": true,
+    "isDirectJson": true,
+    "missionCount": 3,
+    "missions": [
+      {
+        "id": "mission-1",
+        "title": "Precision Passing Gauntlet",
+        "shortDescription": "A collaborative accuracy challenge focusing on teamwork and ball control across the field markings.",
+        "durationMinutes": 25,
+        "intensity": "medium",
+        "players": "6 players (divided into 2 teams of 3)",
+        "equipmentNeeded": [
+          "soccer ball"
+        ],
+        "whyItFits": "Utilizes the large field dimensions and existing field markings to create a structured skill-based competition.",
+        "steps": [
+          "Divide the 6 players into two teams of three at opposite ends of the field.",
+          "Set a target marking or line for each team to hit with the soccer ball.",
+          "Teams must alternate passing the ball to one another, progressively moving further apart after every successful connection.",
+          "The first team to successfully land a pass on the opponent's designated far-side marking wins the round."
+        ],
+        "safetyNotes": [
+          "Ensure players maintain a safe distance from one another while sprinting to retrieve errant balls.",
+          "Watch for uneven patches of grass that could cause ankle rolls.",
+          "Only kick the ball when the recipient is clearly looking and ready."
+        ]
+      },
+      {
+        "id": "mission-2",
+        "title": "The Golden Goal Keep-Away",
+        "shortDescription": "A high-energy circle keep-away game utilizing the open field space.",
+        "durationMinutes": 25,
+        "intensity": "medium",
+        "players": "6 players (5 attackers vs 1 defender)",
+        "equipmentNeeded": [
+          "soccer ball"
+        ],
+        "whyItFits": "Perfectly utilizes the open field grass surface for active movement and dynamic group interaction.",
+        "steps": [
+          "Select one player to start as the defender in the center of a large 15-meter diameter circle formed by the other 5 players.",
+          "The attackers must pass the soccer ball between themselves using their feet while the defender attempts to intercept or touch the ball.",
+          "If the ball is intercepted or kicked out of bounds, the player who touched it last switches places with the defender.",
+          "Rotate defenders every 5 minutes to keep intensity high and everyone involved."
+        ],
+        "safetyNotes": [
+          "Advise players to keep their eyes on the ball at all times to prevent collisions.",
+          "Ensure no sliding tackles occur; keep the game focused on footwork and passing.",
+          "Monitor the group for fatigue and ensure adequate hydration breaks."
+        ]
+      },
+      {
+        "id": "mission-3",
+        "title": "Field Navigation Relay",
+        "shortDescription": "A movement-based relay race that uses the field's geometry to test agility and ball control.",
+        "durationMinutes": 25,
+        "intensity": "medium",
+        "players": "6 players (3 teams of 2)",
+        "equipmentNeeded": [
+          "soccer ball"
+        ],
+        "whyItFits": "Capitalizes on the large field size and markings to create a fast-paced team challenge.",
+        "steps": [
+          "Form three pairs, with each pair positioned at a different corner of the field.",
+          "On 'Go', the first player from each team dribbles the ball to a specific field marking (e.g., the center circle) and back.",
+          "Upon returning, the player must pass the ball accurately to their partner, who repeats the process.",
+          "The first team to complete three successful rounds of navigation wins the relay."
+        ],
+        "safetyNotes": [
+          "Clear the path of any debris on the grass before starting.",
+          "Instruct players to maintain control of the ball to avoid losing it into other team's lanes.",
+          "Ensure ample space between relay lanes to prevent head-on collisions."
+        ]
+      }
+    ],
+    "rawText": "{\n  \"missions\": [\n    {\n      \"id\": \"mission-1\",\n      \"title\": \"Precision Passing Gauntlet\",\n      \"shortDescription\": \"A collaborative accuracy challenge focusing on teamwork and ball control across the field markings.\",\n      \"durationMinutes\": 25,\n      \"intensity\": \"medium\",\n      \"players\": \"6 players (divided into 2 teams of 3)\",\n      \"equipmentNeeded\": [\"soccer ball\"],\n      \"whyItFits\": \"Utilizes the large field dimensions and existing field markings to create a structured skill-based competition.\",\n      \"steps\": [\n        \"Divide the 6 players into two teams of three at opposite ends of the field.\",\n        \"Set a target marking or line for each team to hit with the soccer ball.\",\n        \"Teams must alternate passing the ball to one another, progressively moving further apart after every successful connection.\",\n        \"The first team to successfully land a pass on the opponent's designated far-side marking wins the round.\"\n      ],\n      \"safetyNotes\": [\n        \"Ensure players maintain a safe distance from one another while sprinting to retrieve errant balls.\",\n        \"Watch for uneven patches of grass that could cause ankle rolls.\",\n        \"Only kick the ball when the recipient is clearly looking and ready.\"\n      ]\n    },\n    {\n      \"id\": \"mission-2\",\n      \"title\": \"The Golden Goal Keep-Away\",\n      \"shortDescription\": \"A high-energy circle keep-away game utilizing the open field space.\",\n      \"durationMinutes\": 25,\n      \"intensity\": \"medium\",\n      \"players\": \"6 players (5 attackers vs 1 defender)\",\n      \"equipmentNeeded\": [\"soccer ball\"],\n      \"whyItFits\": \"Perfectly utilizes the open field grass surface for active movement and dynamic group interaction.\",\n      \"steps\": [\n        \"Select one player to start as the defender in the center of a large 15-meter diameter circle formed by the other 5 players.\",\n        \"The attackers must pass the soccer ball between themselves using their feet while the defender attempts to intercept or touch the ball.\",\n        \"If the ball is intercepted or kicked out of bounds, the player who touched it last switches places with the defender.\",\n        \"Rotate defenders every 5 minutes to keep intensity high and everyone involved.\"\n      ],\n      \"safetyNotes\": [\n        \"Advise players to keep their eyes on the ball at all times to prevent collisions.\",\n        \"Ensure no sliding tackles occur; keep the game focused on footwork and passing.\",\n        \"Monitor the group for fatigue and ensure adequate hydration breaks.\"\n      ]\n    },\n    {\n      \"id\": \"mission-3\",\n      \"title\": \"Field Navigation Relay\",\n      \"shortDescription\": \"A movement-based relay race that uses the field's geometry to test agility and ball control.\",\n      \"durationMinutes\": 25,\n      \"intensity\": \"medium\",\n      \"players\": \"6 players (3 teams of 2)\",\n      \"equipmentNeeded\": [\"soccer ball\"],\n      \"whyItFits\": \"Capitalizes on the large field size and markings to create a fast-paced team challenge.\",\n      \"steps\": [\n        \"Form three pairs, with each pair positioned at a different corner of the field.\",\n        \"On 'Go', the first player from each team dribbles the ball to a specific field marking (e.g., the center circle) and back.\",\n        \"Upon returning, the player must pass the ball accurately to their partner, who repeats the process.\",\n        \"The first team to complete three successful rounds of navigation wins the relay.\"\n      ],\n      \"safetyNotes\": [\n        \"Clear the path of any debris on the grass before starting.\",\n        \"Instruct players to maintain control of the ball to avoid losing it into other team's lanes.\",\n        \"Ensure ample space between relay lanes to prevent head-on collisions.\"\n      ]\n    }\n  ]\n}"
+  },
+  {
+    "model": "gemini-3.1-flash-lite",
+    "round": 2,
+    "contextId": 2,
+    "contextName": "Solo Relaxing Outdoor",
+    "latencyMs": 6032,
+    "latencySeconds": 6.03,
+    "success": true,
+    "error": null,
+    "parseSuccess": true,
+    "isDirectJson": true,
+    "missionCount": 3,
+    "missions": [
+      {
+        "id": "mission-1",
+        "title": "Cloud Observation Meditation",
+        "shortDescription": "A mindful practice using the expansive open space to observe the sky.",
+        "durationMinutes": 20,
+        "intensity": "low",
+        "players": "1 player",
+        "equipmentNeeded": [],
+        "whyItFits": "Perfectly utilizes the open grassy area for a quiet, relaxing, stationary experience.",
+        "steps": [
+          "Find a comfortable spot on the grass, ideally on the lower end of the gentle slope.",
+          "Lie down or sit comfortably, ensuring you have an unobstructed view of the sky.",
+          "Practice deep, slow breathing while observing the movement of clouds, allowing thoughts to pass as freely as the clouds themselves for the remainder of your time."
+        ],
+        "safetyNotes": [
+          "Check the grass for hidden holes, insect nests, or sharp debris before sitting or lying down.",
+          "Avoid overexposure to the sun; ensure you are protected if the weather is bright."
+        ]
+      },
+      {
+        "id": "mission-2",
+        "title": "Zen Slope Stroll",
+        "shortDescription": "A slow-paced, intentional walking meditation to connect with the terrain.",
+        "durationMinutes": 20,
+        "intensity": "low",
+        "players": "1 player",
+        "equipmentNeeded": [],
+        "whyItFits": "The gentle grassy slope provides a perfect natural path for a quiet, rhythmic movement activity.",
+        "steps": [
+          "Begin at the bottom of the grassy slope standing still for one minute to calibrate your senses.",
+          "Walk at an extremely slow pace, focusing entirely on the sensation of your feet touching the grass with each step.",
+          "Continue walking in a wide, sweeping arc up the slope and back down, maintaining a silent and meditative mindset throughout the entire 20 minutes."
+        ],
+        "safetyNotes": [
+          "Maintain a slow pace to prevent tripping on uneven grass or slight depressions in the terrain.",
+          "Watch for slippery patches if the grass is damp."
+        ]
+      },
+      {
+        "id": "mission-3",
+        "title": "The Silent Landscape Survey",
+        "shortDescription": "A sensory engagement mission focusing on identifying natural textures and sounds.",
+        "durationMinutes": 20,
+        "intensity": "low",
+        "players": "1 player",
+        "equipmentNeeded": [],
+        "whyItFits": "Maximizes the large open space by encouraging stationary observation and tactile interaction.",
+        "steps": [
+          "Select three distinct points in the large open space to visit, spreading them out to cover the area.",
+          "At each point, kneel or sit quietly for five minutes, listening for distant sounds and observing the local ground texture without moving from your spot.",
+          "Move silently between each station, taking care not to disturb the environment, until all three points have been completed."
+        ],
+        "safetyNotes": [
+          "Be mindful of ticks or ground-dwelling insects when kneeling in tall or dense grass.",
+          "Ensure you remain aware of your surroundings even while practicing quiet observation."
+        ]
+      }
+    ],
+    "rawText": "{\n  \"missions\": [\n    {\n      \"id\": \"mission-1\",\n      \"title\": \"Cloud Observation Meditation\",\n      \"shortDescription\": \"A mindful practice using the expansive open space to observe the sky.\",\n      \"durationMinutes\": 20,\n      \"intensity\": \"low\",\n      \"players\": \"1 player\",\n      \"equipmentNeeded\": [],\n      \"whyItFits\": \"Perfectly utilizes the open grassy area for a quiet, relaxing, stationary experience.\",\n      \"steps\": [\n        \"Find a comfortable spot on the grass, ideally on the lower end of the gentle slope.\",\n        \"Lie down or sit comfortably, ensuring you have an unobstructed view of the sky.\",\n        \"Practice deep, slow breathing while observing the movement of clouds, allowing thoughts to pass as freely as the clouds themselves for the remainder of your time.\"\n      ],\n      \"safetyNotes\": [\n        \"Check the grass for hidden holes, insect nests, or sharp debris before sitting or lying down.\",\n        \"Avoid overexposure to the sun; ensure you are protected if the weather is bright.\"\n      ]\n    },\n    {\n      \"id\": \"mission-2\",\n      \"title\": \"Zen Slope Stroll\",\n      \"shortDescription\": \"A slow-paced, intentional walking meditation to connect with the terrain.\",\n      \"durationMinutes\": 20,\n      \"intensity\": \"low\",\n      \"players\": \"1 player\",\n      \"equipmentNeeded\": [],\n      \"whyItFits\": \"The gentle grassy slope provides a perfect natural path for a quiet, rhythmic movement activity.\",\n      \"steps\": [\n        \"Begin at the bottom of the grassy slope standing still for one minute to calibrate your senses.\",\n        \"Walk at an extremely slow pace, focusing entirely on the sensation of your feet touching the grass with each step.\",\n        \"Continue walking in a wide, sweeping arc up the slope and back down, maintaining a silent and meditative mindset throughout the entire 20 minutes.\"\n      ],\n      \"safetyNotes\": [\n        \"Maintain a slow pace to prevent tripping on uneven grass or slight depressions in the terrain.\",\n        \"Watch for slippery patches if the grass is damp.\"\n      ]\n    },\n    {\n      \"id\": \"mission-3\",\n      \"title\": \"The Silent Landscape Survey\",\n      \"shortDescription\": \"A sensory engagement mission focusing on identifying natural textures and sounds.\",\n      \"durationMinutes\": 20,\n      \"intensity\": \"low\",\n      \"players\": \"1 player\",\n      \"equipmentNeeded\": [],\n      \"whyItFits\": \"Maximizes the large open space by encouraging stationary observation and tactile interaction.\",\n      \"steps\": [\n        \"Select three distinct points in the large open space to visit, spreading them out to cover the area.\",\n        \"At each point, kneel or sit quietly for five minutes, listening for distant sounds and observing the local ground texture without moving from your spot.\",\n        \"Move silently between each station, taking care not to disturb the environment, until all three points have been completed.\"\n      ],\n      \"safetyNotes\": [\n        \"Be mindful of ticks or ground-dwelling insects when kneeling in tall or dense grass.\",\n        \"Ensure you remain aware of your surroundings even while practicing quiet observation.\"\n      ]\n    }\n  ]\n}"
+  },
+  {
+    "model": "gemini-3.1-flash-lite",
+    "round": 2,
+    "contextId": 3,
+    "contextName": "Kids / Playground",
+    "latencyMs": 9297,
+    "latencySeconds": 9.3,
+    "success": true,
+    "error": null,
+    "parseSuccess": true,
+    "isDirectJson": true,
+    "missionCount": 3,
+    "missions": [
+      {
+        "id": "mission-1",
+        "title": "The Playground Architect Challenge",
+        "shortDescription": "Collaboratively design an imaginary expansion to the wooden play structure.",
+        "durationMinutes": 30,
+        "intensity": "medium",
+        "players": "5 participants",
+        "equipmentNeeded": [],
+        "whyItFits": "Uses the playground structure as a focal point without needing extra equipment; encourages teamwork and creativity for all ages.",
+        "steps": [
+          "Gather the group at the wooden play structure.",
+          "Take turns proposing one new 'feature' to add (e.g., a secret tunnel, a dragon nest, a telescope bridge).",
+          "As a team, physically walk around the structure to demonstrate how players would interact with these imaginary new features.",
+          "Conclude by having everyone stand together on the structure for a 'ribbon-cutting' celebration."
+        ],
+        "safetyNotes": [
+          "Watch for splintering wood on the structure.",
+          "Ensure younger children are supervised while climbing or walking near the structure's edges.",
+          "Be mindful of uneven surfaces on the grass when moving between features."
+        ]
+      },
+      {
+        "id": "mission-2",
+        "title": "Synchronized Swingset Symphony",
+        "shortDescription": "Work together to create a rhythmic, timed movement pattern on the swings.",
+        "durationMinutes": 30,
+        "intensity": "medium",
+        "players": "5 participants",
+        "equipmentNeeded": [],
+        "whyItFits": "Uses existing swings; focuses on rhythm and cooperation suitable for mixed age groups; keeps movement controlled.",
+        "steps": [
+          "Assign the swings to participants; those not on a swing act as the 'conductors' standing on the grass.",
+          "The conductors set a rhythmic beat by clapping, and the swingers must match their pumping rhythm to the beat.",
+          "Rotate participants every 5 minutes so everyone gets a turn on the swings.",
+          "Increase the difficulty by having the conductors change the tempo from slow to fast."
+        ],
+        "safetyNotes": [
+          "Maintain a safe distance between people walking in front of or behind active swings.",
+          "Ensure hands are gripping the swing chains firmly at all times.",
+          "Avoid swinging at excessive heights to prevent falls."
+        ]
+      },
+      {
+        "id": "mission-3",
+        "title": "Nature Observation Expedition",
+        "shortDescription": "A collaborative search to identify hidden shapes and textures within the playground environment.",
+        "durationMinutes": 30,
+        "intensity": "medium",
+        "players": "5 participants",
+        "equipmentNeeded": [],
+        "whyItFits": "Utilizes the entire space; promotes exploration and careful observation; perfect for mixed ages and non-competitive interaction.",
+        "steps": [
+          "Divide the playground into three zones: The Grass, The Structure, and The Slide/Swing area.",
+          "Task the group to find five distinct textures (e.g., rough wood, soft grass, smooth slide metal) and three natural patterns (e.g., shadow shapes, leaf arrangements).",
+          "Group members must present their findings to the others by physically guiding them to the spot and describing why it fits the criteria.",
+          "Finish by selecting the 'most interesting discovery' as a team."
+        ],
+        "safetyNotes": [
+          "Check grass for hidden holes or debris before stepping.",
+          "Do not touch or lean on any rusty or unstable metal sections.",
+          "Adults should lead the way to ensure children do not climb into precarious areas."
+        ]
+      }
+    ],
+    "rawText": "{\n  \"missions\": [\n    {\n      \"id\": \"mission-1\",\n      \"title\": \"The Playground Architect Challenge\",\n      \"shortDescription\": \"Collaboratively design an imaginary expansion to the wooden play structure.\",\n      \"durationMinutes\": 30,\n      \"intensity\": \"medium\",\n      \"players\": \"5 participants\",\n      \"equipmentNeeded\": [],\n      \"whyItFits\": \"Uses the playground structure as a focal point without needing extra equipment; encourages teamwork and creativity for all ages.\",\n      \"steps\": [\n        \"Gather the group at the wooden play structure.\",\n        \"Take turns proposing one new 'feature' to add (e.g., a secret tunnel, a dragon nest, a telescope bridge).\",\n        \"As a team, physically walk around the structure to demonstrate how players would interact with these imaginary new features.\",\n        \"Conclude by having everyone stand together on the structure for a 'ribbon-cutting' celebration.\"\n      ],\n      \"safetyNotes\": [\n        \"Watch for splintering wood on the structure.\",\n        \"Ensure younger children are supervised while climbing or walking near the structure's edges.\",\n        \"Be mindful of uneven surfaces on the grass when moving between features.\"\n      ]\n    },\n    {\n      \"id\": \"mission-2\",\n      \"title\": \"Synchronized Swingset Symphony\",\n      \"shortDescription\": \"Work together to create a rhythmic, timed movement pattern on the swings.\",\n      \"durationMinutes\": 30,\n      \"intensity\": \"medium\",\n      \"players\": \"5 participants\",\n      \"equipmentNeeded\": [],\n      \"whyItFits\": \"Uses existing swings; focuses on rhythm and cooperation suitable for mixed age groups; keeps movement controlled.\",\n      \"steps\": [\n        \"Assign the swings to participants; those not on a swing act as the 'conductors' standing on the grass.\",\n        \"The conductors set a rhythmic beat by clapping, and the swingers must match their pumping rhythm to the beat.\",\n        \"Rotate participants every 5 minutes so everyone gets a turn on the swings.\",\n        \"Increase the difficulty by having the conductors change the tempo from slow to fast.\"\n      ],\n      \"safetyNotes\": [\n        \"Maintain a safe distance between people walking in front of or behind active swings.\",\n        \"Ensure hands are gripping the swing chains firmly at all times.\",\n        \"Avoid swinging at excessive heights to prevent falls.\"\n      ]\n    },\n    {\n      \"id\": \"mission-3\",\n      \"title\": \"Nature Observation Expedition\",\n      \"shortDescription\": \"A collaborative search to identify hidden shapes and textures within the playground environment.\",\n      \"durationMinutes\": 30,\n      \"intensity\": \"medium\",\n      \"players\": \"5 participants\",\n      \"equipmentNeeded\": [],\n      \"whyItFits\": \"Utilizes the entire space; promotes exploration and careful observation; perfect for mixed ages and non-competitive interaction.\",\n      \"steps\": [\n        \"Divide the playground into three zones: The Grass, The Structure, and The Slide/Swing area.\",\n        \"Task the group to find five distinct textures (e.g., rough wood, soft grass, smooth slide metal) and three natural patterns (e.g., shadow shapes, leaf arrangements).\",\n        \"Group members must present their findings to the others by physically guiding them to the spot and describing why it fits the criteria.\",\n        \"Finish by selecting the 'most interesting discovery' as a team.\"\n      ],\n      \"safetyNotes\": [\n        \"Check grass for hidden holes or debris before stepping.\",\n        \"Do not touch or lean on any rusty or unstable metal sections.\",\n        \"Adults should lead the way to ensure children do not climb into precarious areas.\"\n      ]\n    }\n  ]\n}"
+  },
+  {
+    "model": "gemini-3.1-flash-lite",
+    "round": 2,
+    "contextId": 4,
+    "contextName": "Indoor Quiet Group",
+    "latencyMs": 2954,
+    "latencySeconds": 2.95,
+    "success": true,
+    "error": null,
+    "parseSuccess": true,
+    "isDirectJson": true,
+    "missionCount": 3,
+    "missions": [
+      {
+        "id": "mission-1",
+        "title": "The Human Gallery",
+        "shortDescription": "Create a living exhibit of poses that reflect your group's collective personality.",
+        "durationMinutes": 15,
+        "intensity": "low",
+        "players": "4 adults",
+        "equipmentNeeded": [],
+        "whyItFits": "Utilizes the open floor space and walls without requiring equipment or noise.",
+        "steps": [
+          "Select one player to be the 'Curator' who stands against a wall.",
+          "The other three players arrange themselves into a cohesive static pose (the sculpture) in the center of the room.",
+          "The Curator observes the sculpture, then switches roles with one of the participants to rotate the creativity.",
+          "Continue until everyone has had a turn as the Curator, focusing on artistic and relaxing posing."
+        ],
+        "safetyNotes": [
+          "Avoid leaning heavily on walls if they are not load-bearing.",
+          "Move slowly when shifting into poses to maintain balance on the wood flooring."
+        ]
+      },
+      {
+        "id": "mission-2",
+        "title": "Echo Narratives",
+        "shortDescription": "A collaborative storytelling game where you build a shared history using only calm, spoken words.",
+        "durationMinutes": 15,
+        "intensity": "low",
+        "players": "4 adults",
+        "equipmentNeeded": [],
+        "whyItFits": "Perfect for a quiet, indoor social environment where conversation is the primary goal.",
+        "steps": [
+          "Sit in a circle on the wood floor.",
+          "One player starts a story with a single, calm sentence.",
+          "Moving clockwise, each player adds one sentence at a time to build a cohesive, relaxing narrative.",
+          "Maintain a low volume to keep the atmosphere calm and intimate."
+        ],
+        "safetyNotes": [
+          "Ensure everyone has enough floor space to sit comfortably without crowding.",
+          "Be mindful of posture to avoid strain during extended sitting."
+        ]
+      },
+      {
+        "id": "mission-3",
+        "title": "Environmental Sync",
+        "shortDescription": "A mindful movement exercise where the group mirrors each other’s slow, deliberate motion.",
+        "durationMinutes": 15,
+        "intensity": "low",
+        "players": "4 adults",
+        "equipmentNeeded": [],
+        "whyItFits": "Uses the open floor space for low-intensity, meditative movement that respects quiet constraints.",
+        "steps": [
+          "Stand in a large circle with plenty of room between participants.",
+          "One player acts as the 'Lead' and performs a very slow, graceful movement (like raising arms or a slow turn).",
+          "The other three players must mimic the movement exactly, attempting to move in perfect synchronization.",
+          "Rotate the lead every few minutes to keep the social dynamic fresh and engaging."
+        ],
+        "safetyNotes": [
+          "Ensure no slipping occurs on the wood flooring; perform movements with controlled steps.",
+          "Maintain adequate spacing so participants do not collide during movement."
+        ]
+      }
+    ],
+    "rawText": "{\n  \"missions\": [\n    {\n      \"id\": \"mission-1\",\n      \"title\": \"The Human Gallery\",\n      \"shortDescription\": \"Create a living exhibit of poses that reflect your group's collective personality.\",\n      \"durationMinutes\": 15,\n      \"intensity\": \"low\",\n      \"players\": \"4 adults\",\n      \"equipmentNeeded\": [],\n      \"whyItFits\": \"Utilizes the open floor space and walls without requiring equipment or noise.\",\n      \"steps\": [\n        \"Select one player to be the 'Curator' who stands against a wall.\",\n        \"The other three players arrange themselves into a cohesive static pose (the sculpture) in the center of the room.\",\n        \"The Curator observes the sculpture, then switches roles with one of the participants to rotate the creativity.\",\n        \"Continue until everyone has had a turn as the Curator, focusing on artistic and relaxing posing.\"\n      ],\n      \"safetyNotes\": [\n        \"Avoid leaning heavily on walls if they are not load-bearing.\",\n        \"Move slowly when shifting into poses to maintain balance on the wood flooring.\"\n      ]\n    },\n    {\n      \"id\": \"mission-2\",\n      \"title\": \"Echo Narratives\",\n      \"shortDescription\": \"A collaborative storytelling game where you build a shared history using only calm, spoken words.\",\n      \"durationMinutes\": 15,\n      \"intensity\": \"low\",\n      \"players\": \"4 adults\",\n      \"equipmentNeeded\": [],\n      \"whyItFits\": \"Perfect for a quiet, indoor social environment where conversation is the primary goal.\",\n      \"steps\": [\n        \"Sit in a circle on the wood floor.\",\n        \"One player starts a story with a single, calm sentence.\",\n        \"Moving clockwise, each player adds one sentence at a time to build a cohesive, relaxing narrative.\",\n        \"Maintain a low volume to keep the atmosphere calm and intimate.\"\n      ],\n      \"safetyNotes\": [\n        \"Ensure everyone has enough floor space to sit comfortably without crowding.\",\n        \"Be mindful of posture to avoid strain during extended sitting.\"\n      ]\n    },\n    {\n      \"id\": \"mission-3\",\n      \"title\": \"Environmental Sync\",\n      \"shortDescription\": \"A mindful movement exercise where the group mirrors each other’s slow, deliberate motion.\",\n      \"durationMinutes\": 15,\n      \"intensity\": \"low\",\n      \"players\": \"4 adults\",\n      \"equipmentNeeded\": [],\n      \"whyItFits\": \"Uses the open floor space for low-intensity, meditative movement that respects quiet constraints.\",\n      \"steps\": [\n        \"Stand in a large circle with plenty of room between participants.\",\n        \"One player acts as the 'Lead' and performs a very slow, graceful movement (like raising arms or a slow turn).\",\n        \"The other three players must mimic the movement exactly, attempting to move in perfect synchronization.\",\n        \"Rotate the lead every few minutes to keep the social dynamic fresh and engaging.\"\n      ],\n      \"safetyNotes\": [\n        \"Ensure no slipping occurs on the wood flooring; perform movements with controlled steps.\",\n        \"Maintain adequate spacing so participants do not collide during movement.\"\n      ]\n    }\n  ]\n}"
+  },
+  {
+    "model": "gemma-4-26b-a4b-it",
+    "round": 1,
+    "contextId": 1,
+    "contextName": "Friend Group / Football Field",
+    "latencyMs": 67205,
+    "latencySeconds": 67.2,
+    "success": true,
+    "error": null,
+    "parseSuccess": true,
+    "isDirectJson": true,
+    "missionCount": 3,
+    "missions": [
+      {
+        "id": "mission-1",
+        "title": "Precision Marksman",
+        "shortDescription": "A skill-based challenge where players compete to stop the ball exactly on field markings.",
+        "durationMinutes": 25,
+        "intensity": "medium",
+        "players": "6 (split into two teams of 3)",
+        "equipmentNeeded": [
+          "soccer ball"
+        ],
+        "whyItFits": "Utilizes the existing field markings as natural target lines in a large outdoor space.",
+        "steps": [
+          "Divide the 6 players into two teams of 3.",
+          "Identify a long, straight field marking (like a sideline or penalty box line) to serve as the target zone.",
+          "Each player takes turns from a designated distance, attempting to kick or roll the ball so it comes to a complete stop directly on the line.",
+          "Teams keep score based on how many successful 'line stops' they achieve within the time limit.",
+          "The team with the most points wins."
+        ],
+        "safetyNotes": [
+          "Ensure players maintain a safe distance from one another when kicking the ball.",
+          "Be mindful of uneven grass patches to prevent tripping while approaching the ball."
+        ]
+      },
+      {
+        "id": "mission-2",
+        "title": "The Dribble Escape",
+        "shortDescription": "An evasion game where one player must navigate the field with the ball while others try to tag them.",
+        "durationMinutes": 25,
+        "intensity": "medium",
+        "players": "6",
+        "equipmentNeeded": [
+          "soccer ball"
+        ],
+        "whyItFits": "Uses the large, open soccer field to allow for safe movement and evasion.",
+        "steps": [
+          "Designate one player as the 'Dribbler' and the other 5 as 'Chasers'.",
+          "The Dribbler starts with the soccer ball and must move around the field using dribbling skills.",
+          "The Chasers attempt to tag the Dribbler by touching them (without tackling or physical contact).",
+          "If the Dribbler is tagged, they pass the ball to a Chaser, who becomes the new Dribbler, and the roles reset.",
+          "The goal is to see who can maintain the longest dribbling streak without being tagged."
+        ],
+        "safetyNotes": [
+          "Emphasize 'tagging' with a light touch only; no aggressive physical contact or tackling.",
+          "Maintain awareness of the field boundaries to avoid running into perimeter structures or fences."
+        ]
+      },
+      {
+        "id": "mission-3",
+        "title": "Marking Lane Relay",
+        "shortDescription": "A fast-paced relay race using the field lines as a slalom course.",
+        "durationMinutes": 25,
+        "intensity": "medium",
+        "players": "6 (split into two teams of 3)",
+        "equipmentNeeded": [
+          "soccer ball"
+        ],
+        "whyItFits": "Turns the structured field layout into an obstacle course without needing extra equipment.",
+        "steps": [
+          "Divide the 6 players into two teams of 3.",
+          "Use the field markings to create a slalom course (e.g., dribbling in a zigzag pattern between two parallel lines).",
+          "On the signal, the first player from each team dribbles the ball through the 'slalom' and back to their starting point.",
+          "The player then passes the ball to the next teammate in line.",
+          "The first team to have all members complete the course wins."
+        ],
+        "safetyNotes": [
+          "Watch for players colliding when turning near the lines.",
+          "Ensure players are looking up while dribbling to avoid tripping on the grass or other players."
+        ]
+      }
+    ],
+    "rawText": "{\n  \"missions\": [\n    {\n      \"id\": \"mission-1\",\n      \"title\": \"Precision Marksman\",\n      \"shortDescription\": \"A skill-based challenge where players compete to stop the ball exactly on field markings.\",\n      \"durationMinutes\": 25,\n      \"intensity\": \"medium\",\n      \"players\": \"6 (split into two teams of 3)\",\n      \"equipmentNeeded\": [\n        \"soccer ball\"\n      ],\n      \"whyItFits\": \"Utilizes the existing field markings as natural target lines in a large outdoor space.\",\n      \"steps\": [\n        \"Divide the 6 players into two teams of 3.\",\n        \"Identify a long, straight field marking (like a sideline or penalty box line) to serve as the target zone.\",\n        \"Each player takes turns from a designated distance, attempting to kick or roll the ball so it comes to a complete stop directly on the line.\",\n        \"Teams keep score based on how many successful 'line stops' they achieve within the time limit.\",\n        \"The team with the most points wins.\"\n      ],\n      \"safetyNotes\": [\n        \"Ensure players maintain a safe distance from one another when kicking the ball.\",\n        \"Be mindful of uneven grass patches to prevent tripping while approaching the ball.\"\n      ]\n    },\n    {\n      \"id\": \"mission-2\",\n      \"title\": \"The Dribble Escape\",\n      \"shortDescription\": \"An evasion game where one player must navigate the field with the ball while others try to tag them.\",\n      \"durationMinutes\": 25,\n      \"intensity\": \"medium\",\n      \"players\": \"6\",\n      \"equipmentNeeded\": [\n        \"soccer ball\"\n      ],\n      \"whyItFits\": \"Uses the large, open soccer field to allow for safe movement and evasion.\",\n      \"steps\": [\n        \"Designate one player as the 'Dribbler' and the other 5 as 'Chasers'.\",\n        \"The Dribbler starts with the soccer ball and must move around the field using dribbling skills.\",\n        \"The Chasers attempt to tag the Dribbler by touching them (without tackling or physical contact).\",\n        \"If the Dribbler is tagged, they pass the ball to a Chaser, who becomes the new Dribbler, and the roles reset.\",\n        \"The goal is to see who can maintain the longest dribbling streak without being tagged.\"\n      ],\n      \"safetyNotes\": [\n        \"Emphasize 'tagging' with a light touch only; no aggressive physical contact or tackling.\",\n        \"Maintain awareness of the field boundaries to avoid running into perimeter structures or fences.\"\n      ]\n    },\n    {\n      \"id\": \"mission-3\",\n      \"title\": \"Marking Lane Relay\",\n      \"shortDescription\": \"A fast-paced relay race using the field lines as a slalom course.\",\n      \"durationMinutes\": 25,\n      \"intensity\": \"medium\",\n      \"players\": \"6 (split into two teams of 3)\",\n      \"equipmentNeeded\": [\n        \"soccer ball\"\n      ],\n      \"whyItFits\": \"Turns the structured field layout into an obstacle course without needing extra equipment.\",\n      \"steps\": [\n        \"Divide the 6 players into two teams of 3.\",\n        \"Use the field markings to create a slalom course (e.g., dribbling in a zigzag pattern between two parallel lines).\",\n        \"On the signal, the first player from each team dribbles the ball through the 'slalom' and back to their starting point.\",\n        \"The player then passes the ball to the next teammate in line.\",\n        \"The first team to have all members complete the course wins.\"\n      ],\n      \"safetyNotes\": [\n        \"Watch for players colliding when turning near the lines.\",\n        \"Ensure players are looking up while dribbling to avoid tripping on the grass or other players.\"\n      ]\n    }\n  ]\n}"
+  },
+  {
+    "model": "gemma-4-26b-a4b-it",
+    "round": 1,
+    "contextId": 2,
+    "contextName": "Solo Relaxing Outdoor",
+    "latencyMs": 42563,
+    "latencySeconds": 42.56,
+    "success": true,
+    "error": null,
+    "parseSuccess": true,
+    "isDirectJson": true,
+    "missionCount": 3,
+    "missions": [
+      {
+        "id": "mission-1",
+        "title": "Cloud Observer",
+        "shortDescription": "Lie back on the gentle slope and practice mindfulness by watching the sky.",
+        "durationMinutes": 20,
+        "intensity": "low",
+        "players": "1",
+        "equipmentNeeded": [],
+        "whyItFits": "Uses the gentle grassy slope for comfort and the outdoor environment for visual stimulation, perfectly matching the relaxing goal.",
+        "steps": [
+          "Find a comfortable spot on the grassy slope where you can lie down flat.",
+          "Slowly settle into the grass and focus your gaze upward at the sky.",
+          "For the remainder of the time, observe the movement of clouds or the shifting colors of the sky, trying to identify three distinct shapes or patterns."
+        ],
+        "safetyNotes": [
+          "Check the area for any insects or prickly weeds before lying down.",
+          "Ensure you are in a safe position away from any sudden changes in terrain."
+        ]
+      },
+      {
+        "id": "mission-2",
+        "title": "Tactile Terrain Trek",
+        "shortDescription": "A slow-paced sensory walk to experience the textures of the grass and slope.",
+        "durationMinutes": 20,
+        "intensity": "low",
+        "players": "1",
+        "equipmentNeeded": [],
+        "whyItFits": "Utilizes the large open space and the specific surface texture (grass/slope) for a quiet, solo sensory experience.",
+        "steps": [
+          "Begin walking at a very slow, deliberate pace across the grassy area.",
+          "Every few steps, stop and focus entirely on the sensation of the grass against your feet or hands.",
+          "Navigate the gentle slope, paying close attention to how the change in incline affects your balance and the feel of the ground."
+        ],
+        "safetyNotes": [
+          "Walk slowly to avoid tripping on uneven patches of ground or hidden holes.",
+          "Maintain awareness of your surroundings to avoid stepping on any unexpected obstacles."
+        ]
+      },
+      {
+        "id": "mission-3",
+        "title": "Zen Balance Flow",
+        "shortDescription": "Use the natural incline of the slope to practice slow, meditative weight shifts.",
+        "durationMinutes": 20,
+        "intensity": "low",
+        "players": "1",
+        "equipmentNeeded": [],
+        "whyItFits": "Leverages the 'gentle grassy slope' feature to provide a unique physical challenge that remains low intensity and quiet.",
+        "steps": [
+          "Find a stable area on the gentle slope and stand with your feet shoulder-width apart.",
+          "Slowly shift your weight from one leg to the other, feeling how the slope influences your center of gravity.",
+          "Incorporate slow, sweeping arm movements to complement your weight shifts, maintaining a steady and quiet rhythm."
+        ],
+        "safetyNotes": [
+          "Perform movements slowly to prevent slipping on the grass.",
+          "If you feel unsteady due to the incline, stop and return to a standing position on flatter ground."
+        ]
+      }
+    ],
+    "rawText": "{\n  \"missions\": [\n    {\n      \"id\": \"mission-1\",\n      \"title\": \"Cloud Observer\",\n      \"shortDescription\": \"Lie back on the gentle slope and practice mindfulness by watching the sky.\",\n      \"durationMinutes\": 20,\n      \"intensity\": \"low\",\n      \"players\": \"1\",\n      \"equipmentNeeded\": [],\n      \"whyItFits\": \"Uses the gentle grassy slope for comfort and the outdoor environment for visual stimulation, perfectly matching the relaxing goal.\",\n      \"steps\": [\n        \"Find a comfortable spot on the grassy slope where you can lie down flat.\",\n        \"Slowly settle into the grass and focus your gaze upward at the sky.\",\n        \"For the remainder of the time, observe the movement of clouds or the shifting colors of the sky, trying to identify three distinct shapes or patterns.\"\n      ],\n      \"safetyNotes\": [\n        \"Check the area for any insects or prickly weeds before lying down.\",\n        \"Ensure you are in a safe position away from any sudden changes in terrain.\"\n      ]\n    },\n    {\n      \"id\": \"mission-2\",\n      \"title\": \"Tactile Terrain Trek\",\n      \"shortDescription\": \"A slow-paced sensory walk to experience the textures of the grass and slope.\",\n      \"durationMinutes\": 20,\n      \"intensity\": \"low\",\n      \"players\": \"1\",\n      \"equipmentNeeded\": [],\n      \"whyItFits\": \"Utilizes the large open space and the specific surface texture (grass/slope) for a quiet, solo sensory experience.\",\n      \"steps\": [\n        \"Begin walking at a very slow, deliberate pace across the grassy area.\",\n        \"Every few steps, stop and focus entirely on the sensation of the grass against your feet or hands.\",\n        \"Navigate the gentle slope, paying close attention to how the change in incline affects your balance and the feel of the ground.\"\n      ],\n      \"safetyNotes\": [\n        \"Walk slowly to avoid tripping on uneven patches of ground or hidden holes.\",\n        \"Maintain awareness of your surroundings to avoid stepping on any unexpected obstacles.\"\n      ]\n    },\n    {\n      \"id\": \"mission-3\",\n      \"title\": \"Zen Balance Flow\",\n      \"shortDescription\": \"Use the natural incline of the slope to practice slow, meditative weight shifts.\",\n      \"durationMinutes\": 20,\n      \"intensity\": \"low\",\n      \"players\": \"1\",\n      \"equipmentNeeded\": [],\n      \"whyItFits\": \"Leverages the 'gentle grassy slope' feature to provide a unique physical challenge that remains low intensity and quiet.\",\n      \"steps\": [\n        \"Find a stable area on the gentle slope and stand with your feet shoulder-width apart.\",\n        \"Slowly shift your weight from one leg to the other, feeling how the slope influences your center of gravity.\",\n        \"Incorporate slow, sweeping arm movements to complement your weight shifts, maintaining a steady and quiet rhythm.\"\n      ],\n      \"safetyNotes\": [\n        \"Perform movements slowly to prevent slipping on the grass.\",\n        \"If you feel unsteady due to the incline, stop and return to a standing position on flatter ground.\"\n      ]\n    }\n  ]\n}"
+  },
+  {
+    "model": "gemma-4-26b-a4b-it",
+    "round": 1,
+    "contextId": 3,
+    "contextName": "Kids / Playground",
+    "latencyMs": 82210,
+    "latencySeconds": 82.21,
+    "success": true,
+    "error": null,
+    "parseSuccess": true,
+    "isDirectJson": true,
+    "missionCount": 3,
+    "missions": [
+      {
+        "id": "mission-1",
+        "title": "Nature's Color Hunt",
+        "shortDescription": "A fast-paced observation game where players race to find colors and textures in their environment.",
+        "durationMinutes": 10,
+        "intensity": "low",
+        "players": "5",
+        "equipmentNeeded": [],
+        "whyItFits": "Utilizes the grass and playground features for observation without requiring any extra equipment.",
+        "steps": [
+          "Gather the group in the center of the open grass area.",
+          "One player acts as the 'Caller' and shouts out a color or a texture (e.g., 'Green!' or 'Rough!').",
+          "All players must quickly find and point to something in the playground (like the grass, wood, or slide) that matches the description.",
+          "The first person to find a match becomes the next Caller."
+        ],
+        "safetyNotes": [
+          "Watch for uneven ground or small holes in the grass while moving quickly.",
+          "Ensure players do not touch any sharp or potentially hazardous objects while searching."
+        ]
+      },
+      {
+        "id": "mission-2",
+        "title": "The Structure Circuit",
+        "shortDescription": "A physical challenge involving navigating the playground's main features in a specific sequence.",
+        "durationMinutes": 10,
+        "intensity": "medium",
+        "players": "5",
+        "equipmentNeeded": [],
+        "whyItFits": "Directly engages the wooden play structure and the slide as part of a physical movement loop.",
+        "steps": [
+          "Form a single-file line at the base of the wooden play structure.",
+          "One by one, players must climb the structure and exit exclusively via the slide.",
+          "After sliding down, the player must walk briskly across the grass back to the start of the line.",
+          "Repeat the circuit until everyone has completed it at least twice."
+        ],
+        "safetyNotes": [
+          "Strictly enforce a 'one at a time' rule for the slide to avoid collisions.",
+          "Adults should supervise children during the climbing portion of the structure.",
+          "Ensure the area at the bottom of the slide is clear before the next person descends."
+        ]
+      },
+      {
+        "id": "mission-3",
+        "title": "Animal Movement Odyssey",
+        "shortDescription": "An imaginative movement game where players travel between playground features acting like different animals.",
+        "durationMinutes": 10,
+        "intensity": "medium",
+        "players": "5",
+        "equipmentNeeded": [],
+        "whyItFits": "Encourages active movement between the swings, the grass, and the structure using the space provided.",
+        "steps": [
+          "Start as a group on the open grass area.",
+          "A designated leader calls out an animal and a destination (e.g., 'Hop like a frog to the swings!').",
+          "All players must move to that feature using only the movement style of the chosen animal.",
+          "Once the group arrives, the first person to reach the destination becomes the next leader and chooses the next animal and destination."
+        ],
+        "safetyNotes": [
+          "Keep a safe distance from the swings to avoid being hit by moving equipment.",
+          "Remind players to be mindful of one another to avoid bumping into each other during animal movements.",
+          "Watch for tripping hazards on the grass during low-to-the-ground movements like crawling."
+        ]
+      }
+    ],
+    "rawText": "{\n  \"missions\": [\n    {\n      \"id\": \"mission-1\",\n      \"title\": \"Nature's Color Hunt\",\n      \"shortDescription\": \"A fast-paced observation game where players race to find colors and textures in their environment.\",\n      \"durationMinutes\": 10,\n      \"intensity\": \"low\",\n      \"players\": \"5\",\n      \"equipmentNeeded\": [],\n      \"whyItFits\": \"Utilizes the grass and playground features for observation without requiring any extra equipment.\",\n      \"steps\": [\n        \"Gather the group in the center of the open grass area.\",\n        \"One player acts as the 'Caller' and shouts out a color or a texture (e.g., 'Green!' or 'Rough!').\",\n        \"All players must quickly find and point to something in the playground (like the grass, wood, or slide) that matches the description.\",\n        \"The first person to find a match becomes the next Caller.\"\n      ],\n      \"safetyNotes\": [\n        \"Watch for uneven ground or small holes in the grass while moving quickly.\",\n        \"Ensure players do not touch any sharp or potentially hazardous objects while searching.\"\n      ]\n    },\n    {\n      \"id\": \"mission-2\",\n      \"title\": \"The Structure Circuit\",\n      \"shortDescription\": \"A physical challenge involving navigating the playground's main features in a specific sequence.\",\n      \"durationMinutes\": 10,\n      \"intensity\": \"medium\",\n      \"players\": \"5\",\n      \"equipmentNeeded\": [],\n      \"whyItFits\": \"Directly engages the wooden play structure and the slide as part of a physical movement loop.\",\n      \"steps\": [\n        \"Form a single-file line at the base of the wooden play structure.\",\n        \"One by one, players must climb the structure and exit exclusively via the slide.\",\n        \"After sliding down, the player must walk briskly across the grass back to the start of the line.\",\n        \"Repeat the circuit until everyone has completed it at least twice.\"\n      ],\n      \"safetyNotes\": [\n        \"Strictly enforce a 'one at a time' rule for the slide to avoid collisions.\",\n        \"Adults should supervise children during the climbing portion of the structure.\",\n        \"Ensure the area at the bottom of the slide is clear before the next person descends.\"\n      ]\n    },\n    {\n      \"id\": \"mission-3\",\n      \"title\": \"Animal Movement Odyssey\",\n      \"shortDescription\": \"An imaginative movement game where players travel between playground features acting like different animals.\",\n      \"durationMinutes\": 10,\n      \"intensity\": \"medium\",\n      \"players\": \"5\",\n      \"equipmentNeeded\": [],\n      \"whyItFits\": \"Encourages active movement between the swings, the grass, and the structure using the space provided.\",\n      \"steps\": [\n        \"Start as a group on the open grass area.\",\n        \"A designated leader calls out an animal and a destination (e.g., 'Hop like a frog to the swings!').\",\n        \"All players must move to that feature using only the movement style of the chosen animal.\",\n        \"Once the group arrives, the first person to reach the destination becomes the next leader and chooses the next animal and destination.\"\n      ],\n      \"safetyNotes\": [\n        \"Keep a safe distance from the swings to avoid being hit by moving equipment.\",\n        \"Remind players to be mindful of one another to avoid bumping into each other during animal movements.\",\n        \"Watch for tripping hazards on the grass during low-to-the-ground movements like crawling.\"\n      ]\n    }\n  ]\n}"
+  },
+  {
+    "model": "gemma-4-26b-a4b-it",
+    "round": 1,
+    "contextId": 4,
+    "contextName": "Indoor Quiet Group",
+    "latencyMs": 60266,
+    "latencySeconds": 60.27,
+    "success": true,
+    "error": null,
+    "parseSuccess": true,
+    "isDirectJson": true,
+    "missionCount": 3,
+    "missions": [
+      {
+        "id": "mission-1",
+        "title": "The Weaver's Thread",
+        "shortDescription": "A collaborative, low-stakes storytelling game where each person contributes a single sentence to build a collective narrative.",
+        "durationMinutes": 15,
+        "intensity": "low",
+        "players": "4",
+        "equipmentNeeded": [],
+        "whyItFits": "This mission maximizes the social and relaxing goal by utilizing the medium indoor space for a seated circle, requiring no equipment and maintaining a quiet atmosphere.",
+        "steps": [
+          "Sit in a circle on the wood floor, ensuring everyone is comfortable.",
+          "Designate one person to start the story with a single, calm sentence.",
+          "Going clockwise, each person adds exactly one sentence to the story, attempting to build a coherent or whimsical tale.",
+          "Continue until the 15-minute mark is reached or the story reaches a natural conclusion."
+        ],
+        "safetyNotes": [
+          "Ensure everyone is sitting in a stable position on the wood floor to avoid slipping.",
+          "Maintain a relaxed posture to support the low-intensity goal."
+        ]
+      },
+      {
+        "id": "mission-2",
+        "title": "Fluid Mimicry",
+        "shortDescription": "A meditative movement activity where players mirror each other's slow, graceful motions in synchronization.",
+        "durationMinutes": 15,
+        "intensity": "low",
+        "players": "4",
+        "equipmentNeeded": [],
+        "whyItFits": "Uses the open floor space for gentle movement. It honors the no-running and quiet constraints while encouraging non-verbal social connection.",
+        "steps": [
+          "Stand in a circle facing inward, leaving enough space between players to move arms freely.",
+          "Select one person to be the 'Lead' for 3 minutes.",
+          "The Lead performs very slow, fluid movements (e.g., slow arm reaches, gentle torso leans, or rhythmic hand gestures).",
+          "The other three players must mirror the Lead's movements as closely and silently as possible.",
+          "Rotate the Lead role every 3 minutes so everyone participates."
+        ],
+        "safetyNotes": [
+          "Move slowly to prevent loss of balance on the wood surface.",
+          "Maintain personal space to avoid accidental contact with others."
+        ]
+      },
+      {
+        "id": "mission-3",
+        "title": "The Detail Scout",
+        "shortDescription": "A quiet observational game focused on finding small, specific environmental details within the room.",
+        "durationMinutes": 15,
+        "intensity": "low",
+        "players": "4",
+        "equipmentNeeded": [],
+        "whyItFits": "Leverages the indoor environment and features (walls, floor) for a slow-paced, engaging mental and observational challenge.",
+        "steps": [
+          "One player is designated as the 'Scout' and stands in the center of the room with their eyes closed.",
+          "The other three players silently select a specific, tiny detail in the room (e.g., a scratch on the wood floor, a specific knot in the wall, or a corner edge).",
+          "The Scout opens their eyes and must find the three details.",
+          "The other players can only guide the Scout using silent hand gestures (pointing or waving) toward the chosen details.",
+          "Once all details are found, rotate the Scout role."
+        ],
+        "safetyNotes": [
+          "Walk slowly and carefully when navigating the room to avoid bumping into walls or other players.",
+          "Be mindful of the wood floor surface when moving to avoid sliding."
+        ]
+      }
+    ],
+    "rawText": "{\n  \"missions\": [\n    {\n      \"id\": \"mission-1\",\n      \"title\": \"The Weaver's Thread\",\n      \"shortDescription\": \"A collaborative, low-stakes storytelling game where each person contributes a single sentence to build a collective narrative.\",\n      \"durationMinutes\": 15,\n      \"intensity\": \"low\",\n      \"players\": \"4\",\n      \"equipmentNeeded\": [],\n      \"whyItFits\": \"This mission maximizes the social and relaxing goal by utilizing the medium indoor space for a seated circle, requiring no equipment and maintaining a quiet atmosphere.\",\n      \"steps\": [\n        \"Sit in a circle on the wood floor, ensuring everyone is comfortable.\",\n        \"Designate one person to start the story with a single, calm sentence.\",\n        \"Going clockwise, each person adds exactly one sentence to the story, attempting to build a coherent or whimsical tale.\",\n        \"Continue until the 15-minute mark is reached or the story reaches a natural conclusion.\"\n      ],\n      \"safetyNotes\": [\n        \"Ensure everyone is sitting in a stable position on the wood floor to avoid slipping.\",\n        \"Maintain a relaxed posture to support the low-intensity goal.\"\n      ]\n    },\n    {\n      \"id\": \"mission-2\",\n      \"title\": \"Fluid Mimicry\",\n      \"shortDescription\": \"A meditative movement activity where players mirror each other's slow, graceful motions in synchronization.\",\n      \"durationMinutes\": 15,\n      \"intensity\": \"low\",\n      \"players\": \"4\",\n      \"equipmentNeeded\": [],\n      \"whyItFits\": \"Uses the open floor space for gentle movement. It honors the no-running and quiet constraints while encouraging non-verbal social connection.\",\n      \"steps\": [\n        \"Stand in a circle facing inward, leaving enough space between players to move arms freely.\",\n        \"Select one person to be the 'Lead' for 3 minutes.\",\n        \"The Lead performs very slow, fluid movements (e.g., slow arm reaches, gentle torso leans, or rhythmic hand gestures).\",\n        \"The other three players must mirror the Lead's movements as closely and silently as possible.\",\n        \"Rotate the Lead role every 3 minutes so everyone participates.\"\n      ],\n      \"safetyNotes\": [\n        \"Move slowly to prevent loss of balance on the wood surface.\",\n        \"Maintain personal space to avoid accidental contact with others.\"\n      ]\n    },\n    {\n      \"id\": \"mission-3\",\n      \"title\": \"The Detail Scout\",\n      \"shortDescription\": \"A quiet observational game focused on finding small, specific environmental details within the room.\",\n      \"durationMinutes\": 15,\n      \"intensity\": \"low\",\n      \"players\": \"4\",\n      \"equipmentNeeded\": [],\n      \"whyItFits\": \"Leverages the indoor environment and features (walls, floor) for a slow-paced, engaging mental and observational challenge.\",\n      \"steps\": [\n        \"One player is designated as the 'Scout' and stands in the center of the room with their eyes closed.\",\n        \"The other three players silently select a specific, tiny detail in the room (e.g., a scratch on the wood floor, a specific knot in the wall, or a corner edge).\",\n        \"The Scout opens their eyes and must find the three details.\",\n        \"The other players can only guide the Scout using silent hand gestures (pointing or waving) toward the chosen details.\",\n        \"Once all details are found, rotate the Scout role.\"\n      ],\n      \"safetyNotes\": [\n        \"Walk slowly and carefully when navigating the room to avoid bumping into walls or other players.\",\n        \"Be mindful of the wood floor surface when moving to avoid sliding.\"\n      ]\n    }\n  ]\n}"
+  },
+  {
+    "model": "gemma-4-26b-a4b-it",
+    "round": 2,
+    "contextId": 1,
+    "contextName": "Friend Group / Football Field",
+    "latencyMs": 66979,
+    "latencySeconds": 66.98,
+    "success": true,
+    "error": null,
+    "parseSuccess": true,
+    "isDirectJson": true,
+    "missionCount": 3,
+    "missions": [
+      {
+        "id": "mission-1",
+        "title": "Line Weaver Challenge",
+        "shortDescription": "A precision passing game where you must keep the ball strictly along the field's painted lines.",
+        "durationMinutes": 20,
+        "intensity": "medium",
+        "players": "6",
+        "equipmentNeeded": [
+          "soccer ball"
+        ],
+        "whyItFits": "Uses the existing field markings and the large space to encourage teamwork and accuracy.",
+        "steps": [
+          "Divide the 6 players into two teams of 3.",
+          "Choose a long straight line on the field (such as a sideline or touchline) to serve as your track.",
+          "Teams compete to see who can complete the most successful passes while keeping the ball touching or immediately adjacent to the line.",
+          "If the ball rolls too far off the line, the count resets for that team.",
+          "The first team to reach 15 consecutive successful 'line passes' wins."
+        ],
+        "safetyNotes": [
+          "Ensure players are looking ahead to avoid colliding with teammates on the line.",
+          "Watch for uneven grass patches that might cause the ball to jump unexpectedly."
+        ]
+      },
+      {
+        "id": "mission-2",
+        "title": "The Interceptor",
+        "shortDescription": "A fast-paced game of keep-away using the center circle as your arena.",
+        "durationMinutes": 15,
+        "intensity": "medium",
+        "players": "6",
+        "equipmentNeeded": [
+          "soccer ball"
+        ],
+        "whyItFits": "Utilizes the center circle feature and is perfectly scaled for a group of 6.",
+        "steps": [
+          "Have 5 players form a large circle around the edge of the center circle marking.",
+          "Place the 6th player in the middle of the circle as the 'Interceptor'.",
+          "The players in the circle must pass the ball to one another using their feet.",
+          "The Interceptor attempts to step in and touch or kick the ball to stop the play.",
+          "If the Interceptor successfuly touches the ball, the player who made the last pass becomes the new Interceptor.",
+          "Rotate the middle player every 3 minutes to keep everyone active."
+        ],
+        "safetyNotes": [
+          "Remind players to use controlled passes to avoid hitting the Interceptor in the legs.",
+          "Maintain enough distance in the circle to prevent accidental collisions during sudden movements."
+        ]
+      },
+      {
+        "id": "mission-3",
+        "title": "Marking Circuit Sprint",
+        "shortDescription": "A dribbling race that tests your control and agility by navigating through field landmarks.",
+        "durationMinutes": 25,
+        "intensity": "medium",
+        "players": "6",
+        "equipmentNeeded": [
+          "soccer ball"
+        ],
+        "whyItFits": "Takes advantage of the large field size and various field markings for a structured course.",
+        "steps": [
+          "Designate the center circle as the 'Start/Finish' zone.",
+          "Set a course: Start at the center, dribble to the penalty arc, then to a corner of the field, and finally to the opposite penalty box.",
+          "Split into two teams of 3. Each team starts with one ball (or takes turns if only one ball is used).",
+          "One player at a time must dribble through the entire circuit and return to the start to tag the next teammate.",
+          "The first team to have all members complete the circuit wins."
+        ],
+        "safetyNotes": [
+          "Since players will be dribbling at speed, ensure they maintain awareness of the other team's path.",
+          "Be mindful of footing on the grass, especially when making sharp turns at the markings."
+        ]
+      }
+    ],
+    "rawText": "{\n  \"missions\": [\n    {\n      \"id\": \"mission-1\",\n      \"title\": \"Line Weaver Challenge\",\n      \"shortDescription\": \"A precision passing game where you must keep the ball strictly along the field's painted lines.\",\n      \"durationMinutes\": 20,\n      \"intensity\": \"medium\",\n      \"players\": \"6\",\n      \"equipmentNeeded\": [\n        \"soccer ball\"\n      ],\n      \"whyItFits\": \"Uses the existing field markings and the large space to encourage teamwork and accuracy.\",\n      \"steps\": [\n        \"Divide the 6 players into two teams of 3.\",\n        \"Choose a long straight line on the field (such as a sideline or touchline) to serve as your track.\",\n        \"Teams compete to see who can complete the most successful passes while keeping the ball touching or immediately adjacent to the line.\",\n        \"If the ball rolls too far off the line, the count resets for that team.\",\n        \"The first team to reach 15 consecutive successful 'line passes' wins.\"\n      ],\n      \"safetyNotes\": [\n        \"Ensure players are looking ahead to avoid colliding with teammates on the line.\",\n        \"Watch for uneven grass patches that might cause the ball to jump unexpectedly.\"\n      ]\n    },\n    {\n      \"id\": \"mission-2\",\n      \"title\": \"The Interceptor\",\n      \"shortDescription\": \"A fast-paced game of keep-away using the center circle as your arena.\",\n      \"durationMinutes\": 15,\n      \"intensity\": \"medium\",\n      \"players\": \"6\",\n      \"equipmentNeeded\": [\n        \"soccer ball\"\n      ],\n      \"whyItFits\": \"Utilizes the center circle feature and is perfectly scaled for a group of 6.\",\n      \"steps\": [\n        \"Have 5 players form a large circle around the edge of the center circle marking.\",\n        \"Place the 6th player in the middle of the circle as the 'Interceptor'.\",\n        \"The players in the circle must pass the ball to one another using their feet.\",\n        \"The Interceptor attempts to step in and touch or kick the ball to stop the play.\",\n        \"If the Interceptor successfuly touches the ball, the player who made the last pass becomes the new Interceptor.\",\n        \"Rotate the middle player every 3 minutes to keep everyone active.\"\n      ],\n      \"safetyNotes\": [\n        \"Remind players to use controlled passes to avoid hitting the Interceptor in the legs.\",\n        \"Maintain enough distance in the circle to prevent accidental collisions during sudden movements.\"\n      ]\n    },\n    {\n      \"id\": \"mission-3\",\n      \"title\": \"Marking Circuit Sprint\",\n      \"shortDescription\": \"A dribbling race that tests your control and agility by navigating through field landmarks.\",\n      \"durationMinutes\": 25,\n      \"intensity\": \"medium\",\n      \"players\": \"6\",\n      \"equipmentNeeded\": [\n        \"soccer ball\"\n      ],\n      \"whyItFits\": \"Takes advantage of the large field size and various field markings for a structured course.\",\n      \"steps\": [\n        \"Designate the center circle as the 'Start/Finish' zone.\",\n        \"Set a course: Start at the center, dribble to the penalty arc, then to a corner of the field, and finally to the opposite penalty box.\",\n        \"Split into two teams of 3. Each team starts with one ball (or takes turns if only one ball is used).\",\n        \"One player at a time must dribble through the entire circuit and return to the start to tag the next teammate.\",\n        \"The first team to have all members complete the circuit wins.\"\n      ],\n      \"safetyNotes\": [\n        \"Since players will be dribbling at speed, ensure they maintain awareness of the other team's path.\",\n        \"Be mindful of footing on the grass, especially when making sharp turns at the markings.\"\n      ]\n    }\n  ]\n}"
+  },
+  {
+    "model": "gemma-4-26b-a4b-it",
+    "round": 2,
+    "contextId": 2,
+    "contextName": "Solo Relaxing Outdoor",
+    "latencyMs": 55116,
+    "latencySeconds": 55.12,
+    "success": true,
+    "error": null,
+    "parseSuccess": true,
+    "isDirectJson": true,
+    "missionCount": 3,
+    "missions": [
+      {
+        "id": "mission-1",
+        "title": "Cloudscape Contemplation",
+        "shortDescription": "A meditative visual journey looking at the sky from the comfort of the slope.",
+        "durationMinutes": 20,
+        "intensity": "low",
+        "players": "1",
+        "equipmentNeeded": [],
+        "whyItFits": "Utilizes the gentle slope for comfort and the large open area for an unobstructed view of the sky.",
+        "steps": [
+          "Find a comfortable spot on the gentle grassy slope where you can lie down fully.",
+          "Lie on your back and settle into the grass, allowing your body to feel supported by the slope.",
+          "Set a mental timer for 15 minutes and focus your gaze upward, observing the movement of clouds, the shifting light, or any patterns in the sky.",
+          "Breath deeply and slowly, matching your breath to the perceived rhythm of the sky's movement."
+        ],
+        "safetyNotes": [
+          "Check the area for insects or uneven ground before lying down.",
+          "Be mindful of sun exposure; use shade if available or avoid during peak intensity hours.",
+          "Ensure you are in a safe, non-traffic area of the open space."
+        ]
+      },
+      {
+        "id": "mission-2",
+        "title": "Tactile Grassland Trek",
+        "shortDescription": "A slow, sensory-focused walk to experience the textures of the meadow.",
+        "durationMinutes": 15,
+        "intensity": "low",
+        "players": "1",
+        "equipmentNeeded": [],
+        "whyItFits": "Uses the grassy surface and the large space to encourage slow, quiet, tactile interaction with nature.",
+        "steps": [
+          "Begin walking very slowly through the open grassy area.",
+          "Every few steps, pause to run your hands lightly over the tops of the grass or touch different types of vegetation you encounter.",
+          "Focus entirely on the sensations: the coolness of the blades, the varied textures, and the feeling of the ground beneath your feet.",
+          "Identify three different textures (e.g., soft, prickly, smooth) without using words, just through touch."
+        ],
+        "safetyNotes": [
+          "Watch for hidden holes or dips in the grass to prevent tripping.",
+          "Avoid touching any plants that look unusual or may cause skin irritation.",
+          "Watch for ticks or insects while interacting closely with the grass."
+        ]
+      },
+      {
+        "id": "mission-3",
+        "title": "Slope Equilibrium",
+        "shortDescription": "A slow-motion balance challenge using the natural incline of the terrain.",
+        "durationMinutes": 15,
+        "intensity": "low",
+        "players": "1",
+        "equipmentNeeded": [],
+        "whyItFits": "Directly utilizes the 'gentle grassy slope' feature to provide a unique physical challenge for a single player.",
+        "steps": [
+          "Locate the gentle grassy slope in your environment.",
+          "Position yourself at the top of the slope.",
+          "Attempt to descend the slope as slowly as possible, moving one foot at a time with extreme deliberation.",
+          "Focus your attention on your center of gravity and how your weight shifts with every micro-movement to maintain perfect balance."
+        ],
+        "safetyNotes": [
+          "Only perform this on a 'gentle' slope to prevent slipping or falling.",
+          "Maintain a wide stance if you feel unsteady.",
+          "Keep your eyes on your footing at all times; do not look away from the ground while descending."
+        ]
+      }
+    ],
+    "rawText": "{\n  \"missions\": [\n    {\n      \"id\": \"mission-1\",\n      \"title\": \"Cloudscape Contemplation\",\n      \"shortDescription\": \"A meditative visual journey looking at the sky from the comfort of the slope.\",\n      \"durationMinutes\": 20,\n      \"intensity\": \"low\",\n      \"players\": \"1\",\n      \"equipmentNeeded\": [],\n      \"whyItFits\": \"Utilizes the gentle slope for comfort and the large open area for an unobstructed view of the sky.\",\n      \"steps\": [\n        \"Find a comfortable spot on the gentle grassy slope where you can lie down fully.\",\n        \"Lie on your back and settle into the grass, allowing your body to feel supported by the slope.\",\n        \"Set a mental timer for 15 minutes and focus your gaze upward, observing the movement of clouds, the shifting light, or any patterns in the sky.\",\n        \"Breath deeply and slowly, matching your breath to the perceived rhythm of the sky's movement.\"\n      ],\n      \"safetyNotes\": [\n        \"Check the area for insects or uneven ground before lying down.\",\n        \"Be mindful of sun exposure; use shade if available or avoid during peak intensity hours.\",\n        \"Ensure you are in a safe, non-traffic area of the open space.\"\n      ]\n    },\n    {\n      \"id\": \"mission-2\",\n      \"title\": \"Tactile Grassland Trek\",\n      \"shortDescription\": \"A slow, sensory-focused walk to experience the textures of the meadow.\",\n      \"durationMinutes\": 15,\n      \"intensity\": \"low\",\n      \"players\": \"1\",\n      \"equipmentNeeded\": [],\n      \"whyItFits\": \"Uses the grassy surface and the large space to encourage slow, quiet, tactile interaction with nature.\",\n      \"steps\": [\n        \"Begin walking very slowly through the open grassy area.\",\n        \"Every few steps, pause to run your hands lightly over the tops of the grass or touch different types of vegetation you encounter.\",\n        \"Focus entirely on the sensations: the coolness of the blades, the varied textures, and the feeling of the ground beneath your feet.\",\n        \"Identify three different textures (e.g., soft, prickly, smooth) without using words, just through touch.\"\n      ],\n      \"safetyNotes\": [\n        \"Watch for hidden holes or dips in the grass to prevent tripping.\",\n        \"Avoid touching any plants that look unusual or may cause skin irritation.\",\n        \"Watch for ticks or insects while interacting closely with the grass.\"\n      ]\n    },\n    {\n      \"id\": \"mission-3\",\n      \"title\": \"Slope Equilibrium\",\n      \"shortDescription\": \"A slow-motion balance challenge using the natural incline of the terrain.\",\n      \"durationMinutes\": 15,\n      \"intensity\": \"low\",\n      \"players\": \"1\",\n      \"equipmentNeeded\": [],\n      \"whyItFits\": \"Directly utilizes the 'gentle grassy slope' feature to provide a unique physical challenge for a single player.\",\n      \"steps\": [\n        \"Locate the gentle grassy slope in your environment.\",\n        \"Position yourself at the top of the slope.\",\n        \"Attempt to descend the slope as slowly as possible, moving one foot at a time with extreme deliberation.\",\n        \"Focus your attention on your center of gravity and how your weight shifts with every micro-movement to maintain perfect balance.\"\n      ],\n      \"safetyNotes\": [\n        \"Only perform this on a 'gentle' slope to prevent slipping or falling.\",\n        \"Maintain a wide stance if you feel unsteady.\",\n        \"Keep your eyes on your footing at all times; do not look away from the ground while descending.\"\n      ]\n    }\n  ]\n}"
+  },
+  {
+    "model": "gemma-4-26b-a4b-it",
+    "round": 2,
+    "contextId": 3,
+    "contextName": "Kids / Playground",
+    "latencyMs": 88386,
+    "latencySeconds": 88.39,
+    "success": true,
+    "error": null,
+    "parseSuccess": true,
+    "isDirectJson": true,
+    "missionCount": 3,
+    "missions": [
+      {
+        "id": "mission-1",
+        "title": "The Feature Flow",
+        "shortDescription": "A fast-paced circuit challenge using the playground's unique features.",
+        "durationMinutes": 30,
+        "intensity": "medium",
+        "players": "5 players",
+        "equipmentNeeded": [],
+        "whyItFits": "This mission utilizes the slide, the wooden structure, and the open grass to create a continuous movement loop that suits a medium intensity goal.",
+        "steps": [
+          "Line up together at the swings to start.",
+          "One person at a time must run to the slide, go down, and then sprint across the grass to the wooden structure.",
+          "Climb through the play structure and emerge on the other side.",
+          "Run back to the swings to tag the next person in line.",
+          "Continue until everyone has completed the circuit three times."
+        ],
+        "safetyNotes": [
+          "Ensure the slide is clear of other players before going down.",
+          "Watch for uneven patches in the grass while sprinting.",
+          "Adults should monitor kids while they navigate the wooden structure."
+        ]
+      },
+      {
+        "id": "mission-2",
+        "title": "Structure Sentinel",
+        "shortDescription": "A game of stealth and tag focused around the wooden play structure.",
+        "durationMinutes": 30,
+        "intensity": "medium",
+        "players": "5 players",
+        "equipmentNeeded": [],
+        "whyItFits": "It uses the height of the wooden structure for the 'Sentinel' and the open grass for the 'Explorers,' making perfect use of the environment.",
+        "steps": [
+          "Select one player to be the 'Sentinel' and have them stand on the wooden play structure.",
+          "The remaining 4 players start at the far edge of the grass area.",
+          "Explorers must try to sneak up and touch the base of the structure without being caught.",
+          "The Sentinel can 'catch' players by pointing at them and calling their name while they are in motion.",
+          "If a player is caught, they become the new Sentinel for the next round."
+        ],
+        "safetyNotes": [
+          "The Sentinel should remain on the structure and avoid leaning too far out.",
+          "Explorers should avoid sudden, aggressive lunges toward the structure.",
+          "Keep distance from the swings to avoid accidental collisions."
+        ]
+      },
+      {
+        "id": "mission-3",
+        "title": "Playground Shapeshifters",
+        "shortDescription": "An imaginative game of mimicking animals using playground equipment.",
+        "durationMinutes": 30,
+        "intensity": "medium",
+        "players": "5 players",
+        "equipmentNeeded": [],
+        "whyItFits": "This uses the variety of playground features (swings, slide, structure) to encourage creative, active movement for both kids and adults.",
+        "steps": [
+          "Gather in a circle on the open grass area.",
+          "Choose one player to be the 'Leader'.",
+          "The Leader calls out an animal and a playground feature (for example: 'A heavy elephant on the swings!' or 'A fast monkey on the slide!').",
+          "All players must immediately move to that feature and mimic the animal's movement.",
+          "The person who performs the most creative movement becomes the Leader for the next round."
+        ],
+        "safetyNotes": [
+          "Ensure players do not climb on the structure in a way that could cause them to fall.",
+          "When using the swings, mimic movements carefully to avoid losing balance.",
+          "Remind kids to keep eyes up while moving toward the features."
+        ]
+      }
+    ],
+    "rawText": "{\n  \"missions\": [\n    {\n      \"id\": \"mission-1\",\n      \"title\": \"The Feature Flow\",\n      \"shortDescription\": \"A fast-paced circuit challenge using the playground's unique features.\",\n      \"durationMinutes\": 30,\n      \"intensity\": \"medium\",\n      \"players\": \"5 players\",\n      \"equipmentNeeded\": [],\n      \"whyItFits\": \"This mission utilizes the slide, the wooden structure, and the open grass to create a continuous movement loop that suits a medium intensity goal.\",\n      \"steps\": [\n        \"Line up together at the swings to start.\",\n        \"One person at a time must run to the slide, go down, and then sprint across the grass to the wooden structure.\",\n        \"Climb through the play structure and emerge on the other side.\",\n        \"Run back to the swings to tag the next person in line.\",\n        \"Continue until everyone has completed the circuit three times.\"\n      ],\n      \"safetyNotes\": [\n        \"Ensure the slide is clear of other players before going down.\",\n        \"Watch for uneven patches in the grass while sprinting.\",\n        \"Adults should monitor kids while they navigate the wooden structure.\"\n      ]\n    },\n    {\n      \"id\": \"mission-2\",\n      \"title\": \"Structure Sentinel\",\n      \"shortDescription\": \"A game of stealth and tag focused around the wooden play structure.\",\n      \"durationMinutes\": 30,\n      \"intensity\": \"medium\",\n      \"players\": \"5 players\",\n      \"equipmentNeeded\": [],\n      \"whyItFits\": \"It uses the height of the wooden structure for the 'Sentinel' and the open grass for the 'Explorers,' making perfect use of the environment.\",\n      \"steps\": [\n        \"Select one player to be the 'Sentinel' and have them stand on the wooden play structure.\",\n        \"The remaining 4 players start at the far edge of the grass area.\",\n        \"Explorers must try to sneak up and touch the base of the structure without being caught.\",\n        \"The Sentinel can 'catch' players by pointing at them and calling their name while they are in motion.\",\n        \"If a player is caught, they become the new Sentinel for the next round.\"\n      ],\n      \"safetyNotes\": [\n        \"The Sentinel should remain on the structure and avoid leaning too far out.\",\n        \"Explorers should avoid sudden, aggressive lunges toward the structure.\",\n        \"Keep distance from the swings to avoid accidental collisions.\"\n      ]\n    },\n    {\n      \"id\": \"mission-3\",\n      \"title\": \"Playground Shapeshifters\",\n      \"shortDescription\": \"An imaginative game of mimicking animals using playground equipment.\",\n      \"durationMinutes\": 30,\n      \"intensity\": \"medium\",\n      \"players\": \"5 players\",\n      \"equipmentNeeded\": [],\n      \"whyItFits\": \"This uses the variety of playground features (swings, slide, structure) to encourage creative, active movement for both kids and adults.\",\n      \"steps\": [\n        \"Gather in a circle on the open grass area.\",\n        \"Choose one player to be the 'Leader'.\",\n        \"The Leader calls out an animal and a playground feature (for example: 'A heavy elephant on the swings!' or 'A fast monkey on the slide!').\",\n        \"All players must immediately move to that feature and mimic the animal's movement.\",\n        \"The person who performs the most creative movement becomes the Leader for the next round.\"\n      ],\n      \"safetyNotes\": [\n        \"Ensure players do not climb on the structure in a way that could cause them to fall.\",\n        \"When using the swings, mimic movements carefully to avoid losing balance.\",\n        \"Remind kids to keep eyes up while moving toward the features.\"\n      ]\n    }\n  ]\n}"
+  },
+  {
+    "model": "gemma-4-26b-a4b-it",
+    "round": 2,
+    "contextId": 4,
+    "contextName": "Indoor Quiet Group",
+    "latencyMs": 46043,
+    "latencySeconds": 46.04,
+    "success": true,
+    "error": null,
+    "parseSuccess": true,
+    "isDirectJson": true,
+    "missionCount": 3,
+    "missions": [
+      {
+        "id": "mission-1",
+        "title": "The Echo Narrative",
+        "shortDescription": "Build a collaborative, whispered story one sentence at a time.",
+        "durationMinutes": 15,
+        "intensity": "low",
+        "players": "4",
+        "equipmentNeeded": [],
+        "whyItFits": "This is a highly social, low-intensity activity that requires no equipment and respects the quiet constraint.",
+        "steps": [
+          "Sit in a circle on the floor or in chairs, ensuring everyone can see each other.",
+          "The first player begins a story with just one single, calming sentence.",
+          "Moving clockwise, each player adds exactly one sentence to the story, attempting to build a coherent and relaxing plot.",
+          "Continue the cycle until the 15 minutes are complete, focusing on maintaining a gentle, conversational tone."
+        ],
+        "safetyNotes": [
+          "Ensure seating is stable and arranged to allow for easy exits if needed.",
+          "Maintain a comfortable sitting position to avoid muscle strain during the 15 minutes."
+        ]
+      },
+      {
+        "id": "mission-2",
+        "title": "The Detail Detectives",
+        "shortDescription": "A slow-paced scavenger hunt for subtle textures and patterns in the room.",
+        "durationMinutes": 15,
+        "intensity": "low",
+        "players": "4",
+        "equipmentNeeded": [],
+        "whyItFits": "Utilizes the indoor environment and features like walls and wood flooring while encouraging slow, mindful movement.",
+        "steps": [
+          "Stand in the center of the room to begin.",
+          "One player acts as the 'Caller' and names a subtle visual or tactile attribute (e.g., 'something with a grain pattern', 'something perfectly vertical', or 'something matte').",
+          "All players walk slowly and quietly around the room to find an example of that attribute.",
+          "Once everyone has found an example, the group gathers to briefly point out their findings before the next player becomes the Caller."
+        ],
+        "safetyNotes": [
+          "Walk slowly on the wood flooring to prevent slipping.",
+          "Be mindful of walls and corners when moving around the perimeter of the room."
+        ]
+      },
+      {
+        "id": "mission-3",
+        "title": "Slow-Motion Mirror",
+        "shortDescription": "A non-verbal, meditative movement game involving synchronized gestures.",
+        "durationMinutes": 15,
+        "intensity": "low",
+        "players": "4",
+        "equipmentNeeded": [],
+        "whyItFits": "Focuses on social connection through non-verbal interaction and fits the medium space and quiet requirement.",
+        "steps": [
+          "Stand in a circle facing inward, leaving enough personal space between each person.",
+          "Designate one person as the 'Lead' to start.",
+          "The Lead performs a very slow, graceful movement (such as raising an arm, tilting their head, or leaning slightly).",
+          "The other three players must mirror the movement as accurately and slowly as possible, as if they are the Lead's reflection.",
+          "Every 3 minutes, rotate the role of the Lead so everyone has a turn to guide the group's movement."
+        ],
+        "safetyNotes": [
+          "Maintain a safe distance from other players to avoid accidental contact during movements.",
+          "Avoid sudden or jerky movements to maintain the low-intensity, relaxing nature of the mission."
+        ]
+      }
+    ],
+    "rawText": "{\n  \"missions\": [\n    {\n      \"id\": \"mission-1\",\n      \"title\": \"The Echo Narrative\",\n      \"shortDescription\": \"Build a collaborative, whispered story one sentence at a time.\",\n      \"durationMinutes\": 15,\n      \"intensity\": \"low\",\n      \"players\": \"4\",\n      \"equipmentNeeded\": [],\n      \"whyItFits\": \"This is a highly social, low-intensity activity that requires no equipment and respects the quiet constraint.\",\n      \"steps\": [\n        \"Sit in a circle on the floor or in chairs, ensuring everyone can see each other.\",\n        \"The first player begins a story with just one single, calming sentence.\",\n        \"Moving clockwise, each player adds exactly one sentence to the story, attempting to build a coherent and relaxing plot.\",\n        \"Continue the cycle until the 15 minutes are complete, focusing on maintaining a gentle, conversational tone.\"\n      ],\n      \"safetyNotes\": [\n        \"Ensure seating is stable and arranged to allow for easy exits if needed.\",\n        \"Maintain a comfortable sitting position to avoid muscle strain during the 15 minutes.\"\n      ]\n    },\n    {\n      \"id\": \"mission-2\",\n      \"title\": \"The Detail Detectives\",\n      \"shortDescription\": \"A slow-paced scavenger hunt for subtle textures and patterns in the room.\",\n      \"durationMinutes\": 15,\n      \"intensity\": \"low\",\n      \"players\": \"4\",\n      \"equipmentNeeded\": [],\n      \"whyItFits\": \"Utilizes the indoor environment and features like walls and wood flooring while encouraging slow, mindful movement.\",\n      \"steps\": [\n        \"Stand in the center of the room to begin.\",\n        \"One player acts as the 'Caller' and names a subtle visual or tactile attribute (e.g., 'something with a grain pattern', 'something perfectly vertical', or 'something matte').\",\n        \"All players walk slowly and quietly around the room to find an example of that attribute.\",\n        \"Once everyone has found an example, the group gathers to briefly point out their findings before the next player becomes the Caller.\"\n      ],\n      \"safetyNotes\": [\n        \"Walk slowly on the wood flooring to prevent slipping.\",\n        \"Be mindful of walls and corners when moving around the perimeter of the room.\"\n      ]\n    },\n    {\n      \"id\": \"mission-3\",\n      \"title\": \"Slow-Motion Mirror\",\n      \"shortDescription\": \"A non-verbal, meditative movement game involving synchronized gestures.\",\n      \"durationMinutes\": 15,\n      \"intensity\": \"low\",\n      \"players\": \"4\",\n      \"equipmentNeeded\": [],\n      \"whyItFits\": \"Focuses on social connection through non-verbal interaction and fits the medium space and quiet requirement.\",\n      \"steps\": [\n        \"Stand in a circle facing inward, leaving enough personal space between each person.\",\n        \"Designate one person as the 'Lead' to start.\",\n        \"The Lead performs a very slow, graceful movement (such as raising an arm, tilting their head, or leaning slightly).\",\n        \"The other three players must mirror the movement as accurately and slowly as possible, as if they are the Lead's reflection.\",\n        \"Every 3 minutes, rotate the role of the Lead so everyone has a turn to guide the group's movement.\"\n      ],\n      \"safetyNotes\": [\n        \"Maintain a safe distance from other players to avoid accidental contact during movements.\",\n        \"Avoid sudden or jerky movements to maintain the low-intensity, relaxing nature of the mission.\"\n      ]\n    }\n  ]\n}"
+  }
+]
