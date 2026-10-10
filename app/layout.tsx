@@ -13,13 +13,28 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://before-we-scroll.vercel.app"),
   title: "Before We Scroll",
   description:
-    "Turn the moment before another scroll into something worth doing. AI-guided micro-adventures tailored to your surroundings.",
+    "Turn the moment before another scroll into something worth doing. AI-guided real-world missions tailored to your surroundings.",
   icons: {
     icon: "/favicon.png",
     shortcut: "/favicon.png",
     apple: "/favicon.png",
+  },
+  openGraph: {
+    title: "Before We Scroll",
+    description:
+      "Turn the moment before another scroll into something worth doing. AI-guided real-world missions tailored to your surroundings.",
+    url: "https://before-we-scroll.vercel.app",
+    siteName: "Before We Scroll",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Before We Scroll",
+    description:
+      "Turn the moment before another scroll into something worth doing. AI-guided real-world missions tailored to your surroundings.",
   },
 };
 
