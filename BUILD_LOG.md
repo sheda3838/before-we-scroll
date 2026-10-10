@@ -1366,3 +1366,31 @@ The project now uses the official MongoDB Node.js driver:
 
 ```text
 mongodb
+
+
+# Phase 7 — ElevenLabs Text-to-Speech Mission Narration
+
+**Status:** Completed
+
+## Goal
+
+Phase 7 added spoken mission narration using ElevenLabs Text-to-Speech.
+
+The narration experience is available in two stages:
+
+**Before Mission Start**
+→ Read the full mission aloud
+
+**During Active Mission**
+→ Read only the mission steps and safety reminders again
+
+The feature is designed to reduce screen dependence and support the core Outventure AI goal of getting users into real-world activity.
+
+---
+
+## ElevenLabs Text-to-Speech Integration
+
+A new server-side TTS endpoint was introduced:
+
+```text
+POST /api/tts

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useSyncExternalStore } from "react";
+import { useState, useRef, useEffect, useCallback, useSyncExternalStore } from "react";
 import {
   MissionContext,
   IntensityLevel,
@@ -30,6 +30,15 @@ import {
 } from "@/lib/timerUtils";
 
 const SESSION_STORAGE_KEY = "outventure-session-id";
+
+function rewindAudio(audio: HTMLAudioElement | null) {
+  if (!audio) return;
+  try {
+    audio.currentTime = 0;
+  } catch {
+    // ignore
+  }
+}
 
 function getOrCreateSessionId(): string {
   if (typeof window === "undefined") return "";
@@ -154,6 +163,33 @@ export default function Home() {
   const feedbackCameraInputRef = useRef<HTMLInputElement>(null);
   const feedbackGalleryInputRef = useRef<HTMLInputElement>(null);
 
+  // ElevenLabs Text-to-Speech Narration State (cached by mission ID & mode: "full" | "steps")
+  const [isGeneratingSpeech, setIsGeneratingSpeech] = useState(false);
+  const [generatingSpeechMode, setGeneratingSpeechMode] = useState<"full" | "steps" | null>(null);
+  const [isPlayingSpeech, setIsPlayingSpeech] = useState(false);
+  const [isSpeechPaused, setIsSpeechPaused] = useState(false);
+  const [activeSpeechMode, setActiveSpeechMode] = useState<"full" | "steps" | null>(null);
+
+  const [fullAudioUrl, setFullAudioUrl] = useState<string | null>(null);
+  const [stepsAudioUrl, setStepsAudioUrl] = useState<string | null>(null);
+  const [speechError, setSpeechError] = useState<string | null>(null);
+
+  const fullAudioRef = useRef<HTMLAudioElement | null>(null);
+  const fullAudioUrlRef = useRef<string | null>(null);
+  const fullAudioMissionIdRef = useRef<string | null>(null);
+
+  const stepsAudioRef = useRef<HTMLAudioElement | null>(null);
+  const stepsAudioUrlRef = useRef<string | null>(null);
+  const stepsAudioMissionIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    fullAudioUrlRef.current = fullAudioUrl;
+  }, [fullAudioUrl]);
+
+  useEffect(() => {
+    stepsAudioUrlRef.current = stepsAudioUrl;
+  }, [stepsAudioUrl]);
+
   // Restore active mission from localStorage (survives browser refresh)
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -238,6 +274,19 @@ export default function Home() {
           clearInterval(missionIntervalRef.current);
           missionIntervalRef.current = null;
         }
+
+        // Stop active narration audio if playing when timer finishes
+        if (fullAudioRef.current) {
+          fullAudioRef.current.pause();
+          rewindAudio(fullAudioRef.current);
+        }
+        if (stepsAudioRef.current) {
+          stepsAudioRef.current.pause();
+          rewindAudio(stepsAudioRef.current);
+        }
+        setIsPlayingSpeech(false);
+        setIsSpeechPaused(false);
+
         setMissionRemainingMs(0);
         setMissionCompleted(true);
         setMissionCompletedAt(Date.now());
@@ -289,6 +338,32 @@ export default function Home() {
     };
   }, [feedbackPhotoPreviewUrl]);
 
+  // Clean up narration audio ONLY on component unmount
+  useEffect(() => {
+    return () => {
+      if (fullAudioRef.current) {
+        fullAudioRef.current.pause();
+        fullAudioRef.current.removeAttribute("src");
+        fullAudioRef.current.load();
+        fullAudioRef.current = null;
+      }
+      if (fullAudioUrlRef.current) {
+        URL.revokeObjectURL(fullAudioUrlRef.current);
+        fullAudioUrlRef.current = null;
+      }
+      if (stepsAudioRef.current) {
+        stepsAudioRef.current.pause();
+        stepsAudioRef.current.removeAttribute("src");
+        stepsAudioRef.current.load();
+        stepsAudioRef.current = null;
+      }
+      if (stepsAudioUrlRef.current) {
+        URL.revokeObjectURL(stepsAudioUrlRef.current);
+        stepsAudioUrlRef.current = null;
+      }
+    };
+  }, []);
+
   // Clean up microphone media stream and recording timer on unmount
   useEffect(() => {
     return () => {
@@ -308,6 +383,250 @@ export default function Home() {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const resetSpeechAudio = useCallback(() => {
+    if (fullAudioRef.current) {
+      fullAudioRef.current.pause();
+      fullAudioRef.current.removeAttribute("src");
+      fullAudioRef.current.load();
+      fullAudioRef.current = null;
+    }
+    if (fullAudioUrlRef.current) {
+      URL.revokeObjectURL(fullAudioUrlRef.current);
+      fullAudioUrlRef.current = null;
+    }
+    fullAudioMissionIdRef.current = null;
+    setFullAudioUrl(null);
+
+    if (stepsAudioRef.current) {
+      stepsAudioRef.current.pause();
+      stepsAudioRef.current.removeAttribute("src");
+      stepsAudioRef.current.load();
+      stepsAudioRef.current = null;
+    }
+    if (stepsAudioUrlRef.current) {
+      URL.revokeObjectURL(stepsAudioUrlRef.current);
+      stepsAudioUrlRef.current = null;
+    }
+    stepsAudioMissionIdRef.current = null;
+    setStepsAudioUrl(null);
+
+    setIsGeneratingSpeech(false);
+    setGeneratingSpeechMode(null);
+    setIsPlayingSpeech(false);
+    setIsSpeechPaused(false);
+    setActiveSpeechMode(null);
+    setSpeechError(null);
+  }, []);
+
+  const handleSelectMission = (mission: Mission) => {
+    if (selectedMission?.id !== mission.id) {
+      resetSpeechAudio();
+    }
+    setSelectedMission(mission);
+  };
+
+  const setupAudioListeners = (audio: HTMLAudioElement, mode: "full" | "steps") => {
+    audio.onended = () => {
+      setIsPlayingSpeech(false);
+      setIsSpeechPaused(false);
+      setSpeechError(null);
+    };
+
+    audio.onerror = () => {
+      if (!audio.src || audio.src === window.location.href) {
+        return;
+      }
+      if (audio.error) {
+        console.warn(`[TTS Playback - ${mode}] Audio element error:`, audio.error);
+        setIsPlayingSpeech(false);
+        setIsSpeechPaused(false);
+        setSpeechError("Audio playback encountered an error.");
+      }
+    };
+  };
+
+  const playAudioSafely = async (
+    audio: HTMLAudioElement,
+    mode: "full" | "steps",
+    fallbackErrorMessage = "Unable to play narration audio."
+  ) => {
+    try {
+      await audio.play();
+      setActiveSpeechMode(mode);
+      setIsPlayingSpeech(true);
+      setIsSpeechPaused(false);
+      setSpeechError(null);
+      return true;
+    } catch (err: unknown) {
+      if (err instanceof DOMException && err.name === "AbortError") {
+        return false;
+      }
+      console.warn(`[TTS Playback - ${mode}] play() failed:`, err);
+      setIsPlayingSpeech(false);
+      setSpeechError(fallbackErrorMessage);
+      return false;
+    }
+  };
+
+  const handlePlayNarration = async (mode: "full" | "steps" = "full") => {
+    if (!selectedMission) return;
+    setSpeechError(null);
+
+    // Pause opposite narration mode if playing
+    const otherAudio = mode === "full" ? stepsAudioRef.current : fullAudioRef.current;
+    if (otherAudio) {
+      otherAudio.pause();
+    }
+
+    const audioRef = mode === "full" ? fullAudioRef : stepsAudioRef;
+    const urlRef = mode === "full" ? fullAudioUrlRef : stepsAudioUrlRef;
+    const missionIdRef = mode === "full" ? fullAudioMissionIdRef : stepsAudioMissionIdRef;
+
+    // Reuse existing audio if already generated for this mission and mode
+    if (urlRef.current && missionIdRef.current === selectedMission.id) {
+      let audio = audioRef.current;
+      if (!audio) {
+        audio = new Audio(urlRef.current);
+        setupAudioListeners(audio, mode);
+        audioRef.current = audio;
+      }
+
+      if (activeSpeechMode === mode && isSpeechPaused) {
+        await playAudioSafely(audio, mode, "Unable to resume narration.");
+        return;
+      }
+
+      if (activeSpeechMode === mode && isPlayingSpeech) {
+        audio.pause();
+        setIsPlayingSpeech(false);
+        setIsSpeechPaused(true);
+        return;
+      }
+
+      // Replay from beginning
+      rewindAudio(audio);
+      await playAudioSafely(audio, mode, "Unable to play narration audio.");
+      return;
+    }
+
+    // Call /api/tts to generate fresh narration for this mode
+    setIsGeneratingSpeech(true);
+    setGeneratingSpeechMode(mode);
+    let audioBlob: Blob;
+
+    try {
+      const res = await fetch("/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mission: selectedMission, mode }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        throw new Error(errorData?.error || "Unable to prepare narration.");
+      }
+
+      audioBlob = await res.blob();
+    } catch (err) {
+      console.error(`[TTS Generation - ${mode}] Error:`, err);
+      setSpeechError("We couldn't prepare the narration right now. You can still read the mission steps below.");
+      setIsGeneratingSpeech(false);
+      setGeneratingSpeechMode(null);
+      return;
+    }
+
+    // Generation succeeded! Handle audio creation & playback separately
+    try {
+      if (urlRef.current) {
+        URL.revokeObjectURL(urlRef.current);
+        urlRef.current = null;
+      }
+
+      const newUrl = URL.createObjectURL(audioBlob);
+      urlRef.current = newUrl;
+      missionIdRef.current = selectedMission.id;
+
+      if (mode === "full") {
+        setFullAudioUrl(newUrl);
+      } else {
+        setStepsAudioUrl(newUrl);
+      }
+
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.removeAttribute("src");
+        audioRef.current.load();
+      }
+
+      const audio = new Audio(newUrl);
+      setupAudioListeners(audio, mode);
+      audioRef.current = audio;
+
+      setIsGeneratingSpeech(false);
+      setGeneratingSpeechMode(null);
+
+      await playAudioSafely(audio, mode, "Audio ready. Tap to listen.");
+    } catch (playbackErr) {
+      console.warn(`[TTS Playback - ${mode}] Setup error:`, playbackErr);
+      setIsGeneratingSpeech(false);
+      setGeneratingSpeechMode(null);
+      setSpeechError("Audio ready. Tap to listen.");
+    }
+  };
+
+  const handlePauseNarration = () => {
+    const currentAudio = activeSpeechMode === "steps" ? stepsAudioRef.current : fullAudioRef.current;
+    if (currentAudio && isPlayingSpeech) {
+      currentAudio.pause();
+      setIsPlayingSpeech(false);
+      setIsSpeechPaused(true);
+    }
+  };
+
+  const handleResumeNarration = async () => {
+    setSpeechError(null);
+    const mode = activeSpeechMode || "full";
+    const currentAudio = mode === "steps" ? stepsAudioRef.current : fullAudioRef.current;
+    if (currentAudio && isSpeechPaused) {
+      await playAudioSafely(currentAudio, mode, "Unable to resume narration.");
+    }
+  };
+
+  const handleReplayNarration = async (mode: "full" | "steps" = "full") => {
+    setSpeechError(null);
+    const otherAudio = mode === "full" ? stepsAudioRef.current : fullAudioRef.current;
+    if (otherAudio) {
+      otherAudio.pause();
+    }
+
+    const audioRef = mode === "full" ? fullAudioRef : stepsAudioRef;
+    const urlRef = mode === "full" ? fullAudioUrlRef : stepsAudioUrlRef;
+    const missionIdRef = mode === "full" ? fullAudioMissionIdRef : stepsAudioMissionIdRef;
+
+    if (urlRef.current && missionIdRef.current === selectedMission?.id) {
+      let audio = audioRef.current;
+      if (!audio) {
+        audio = new Audio(urlRef.current);
+        setupAudioListeners(audio, mode);
+        audioRef.current = audio;
+      }
+      rewindAudio(audio);
+      await playAudioSafely(audio, mode, "Unable to replay narration.");
+    } else {
+      handlePlayNarration(mode);
+    }
+  };
+
+  const handleStopNarration = () => {
+    const currentAudio = activeSpeechMode === "steps" ? stepsAudioRef.current : fullAudioRef.current;
+    if (currentAudio) {
+      currentAudio.pause();
+      rewindAudio(currentAudio);
+    }
+    setIsPlayingSpeech(false);
+    setIsSpeechPaused(false);
   };
 
   const resetFeedbackState = () => {
@@ -477,6 +796,7 @@ export default function Home() {
     if (missionStartedAt && !missionCompleted) {
       return;
     }
+    resetSpeechAudio();
     resetFeedbackState();
     setGeneratedMissions([]);
     setSelectedMission(null);
@@ -499,6 +819,12 @@ export default function Home() {
 
   const handleStartMission = () => {
     if (!selectedMission) return;
+    // Pause full narration audio if playing when user starts mission
+    if (fullAudioRef.current && isPlayingSpeech) {
+      fullAudioRef.current.pause();
+      setIsPlayingSpeech(false);
+      setIsSpeechPaused(false);
+    }
     resetFeedbackState();
     unlockAudio();
     const now = Date.now();
@@ -534,6 +860,19 @@ export default function Home() {
       clearInterval(missionIntervalRef.current);
       missionIntervalRef.current = null;
     }
+
+    // Stop active narration audio if playing when user finishes early
+    if (fullAudioRef.current) {
+      fullAudioRef.current.pause();
+      rewindAudio(fullAudioRef.current);
+    }
+    if (stepsAudioRef.current) {
+      stepsAudioRef.current.pause();
+      rewindAudio(stepsAudioRef.current);
+    }
+    setIsPlayingSpeech(false);
+    setIsSpeechPaused(false);
+
     const now = Date.now();
     setMissionRemainingMs(0);
     setMissionCompleted(true);
@@ -558,6 +897,7 @@ export default function Home() {
       clearInterval(missionIntervalRef.current);
       missionIntervalRef.current = null;
     }
+    resetSpeechAudio();
     resetFeedbackState();
     setMissionStartedAt(null);
     setMissionExpectedEndAt(null);
@@ -1996,7 +2336,7 @@ export default function Home() {
                   <div className="pt-4 mt-2">
                     <button
                       type="button"
-                      onClick={() => setSelectedMission(mission)}
+                      onClick={() => handleSelectMission(mission)}
                       className="w-full inline-flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl text-xs font-bold bg-zinc-900 dark:bg-zinc-100 hover:bg-emerald-600 dark:hover:bg-emerald-500 text-white dark:text-zinc-900 hover:text-white dark:hover:text-white transition shadow-xs cursor-pointer"
                     >
                       <span>Choose Mission</span>
@@ -2069,6 +2409,148 @@ export default function Home() {
                   </span>
                 </div>
               </div>
+
+              {/* Audio Narration Section (Pre-start: Full Narration) */}
+              <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/80 dark:border-zinc-700/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl" aria-hidden="true">
+                    {isPlayingSpeech && activeSpeechMode === "full"
+                      ? "🔊"
+                      : isSpeechPaused && activeSpeechMode === "full"
+                      ? "⏸️"
+                      : "🎙️"}
+                  </span>
+                  <div>
+                    <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                      <span>Audio Narration</span>
+                      {isPlayingSpeech && activeSpeechMode === "full" && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 animate-pulse">
+                          Playing
+                        </span>
+                      )}
+                      {isSpeechPaused && activeSpeechMode === "full" && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300">
+                          Paused
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                      {isGeneratingSpeech && generatingSpeechMode === "full"
+                        ? "Preparing spoken narration..."
+                        : isPlayingSpeech && activeSpeechMode === "full"
+                        ? "Narrating mission steps and safety instructions..."
+                        : isSpeechPaused && activeSpeechMode === "full"
+                        ? "Narration paused. Tap Resume to continue."
+                        : fullAudioUrl
+                        ? "Audio ready. Tap to listen again."
+                        : "Listen to the complete mission steps and safety points aloud."}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
+                  {isGeneratingSpeech && generatingSpeechMode === "full" ? (
+                    <button
+                      type="button"
+                      disabled
+                      aria-label="Preparing narration"
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-bold text-xs shadow-sm opacity-60 cursor-not-allowed"
+                    >
+                      <span className="inline-block animate-spin" aria-hidden="true">⏳</span>
+                      <span>Preparing narration...</span>
+                    </button>
+                  ) : !fullAudioUrl ? (
+                    <button
+                      type="button"
+                      onClick={() => handlePlayNarration("full")}
+                      aria-label="Read mission aloud"
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 active:bg-zinc-950 dark:bg-zinc-100 dark:hover:bg-white dark:active:bg-zinc-200 text-white dark:text-zinc-900 font-bold text-xs shadow-sm transition cursor-pointer"
+                    >
+                      <span aria-hidden="true">🔊</span>
+                      <span>Read Mission Aloud</span>
+                    </button>
+                  ) : isPlayingSpeech && activeSpeechMode === "full" ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={handlePauseNarration}
+                        aria-label="Pause narration"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-700 dark:hover:bg-zinc-600 text-zinc-800 dark:text-zinc-100 font-bold text-xs transition cursor-pointer"
+                      >
+                        <span aria-hidden="true">⏸</span>
+                        <span>Pause</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleStopNarration}
+                        aria-label="Stop narration"
+                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 text-xs font-medium transition cursor-pointer"
+                      >
+                        <span aria-hidden="true">⏹</span>
+                        <span>Stop</span>
+                      </button>
+                    </>
+                  ) : isSpeechPaused && activeSpeechMode === "full" ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={handleResumeNarration}
+                        aria-label="Resume narration"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-xs shadow-sm transition cursor-pointer"
+                      >
+                        <span aria-hidden="true">▶</span>
+                        <span>Resume</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleReplayNarration("full")}
+                        aria-label="Replay narration"
+                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 text-xs font-semibold border border-zinc-200 dark:border-zinc-700 transition cursor-pointer"
+                      >
+                        <span aria-hidden="true">↺</span>
+                        <span>Replay</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleStopNarration}
+                        aria-label="Stop narration"
+                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 text-xs font-medium transition cursor-pointer"
+                      >
+                        <span aria-hidden="true">⏹</span>
+                        <span>Stop</span>
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => handleReplayNarration("full")}
+                        aria-label="Replay narration"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-xs shadow-sm transition cursor-pointer"
+                      >
+                        <span aria-hidden="true">↺</span>
+                        <span>Replay</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleStopNarration}
+                        aria-label="Stop narration"
+                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 text-xs font-medium transition cursor-pointer"
+                      >
+                        <span aria-hidden="true">⏹</span>
+                        <span>Stop</span>
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {speechError && (
+                <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-xs text-rose-700 dark:text-rose-300 flex items-center gap-2">
+                  <span>⚠️</span>
+                  <span>{speechError}</span>
+                </div>
+              )}
 
               {/* Why this fits */}
               {selectedMission.whyItFits && (
@@ -2251,8 +2733,8 @@ export default function Home() {
                 )}
               </div>
 
-              {/* Controls: Details Toggle & Finish Early */}
-              <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+              {/* Controls: Details Toggle, Narration & Finish Early */}
+              <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3 flex-wrap">
                 <button
                   type="button"
                   onClick={() => setShowDetailsWhileRunning(!showDetailsWhileRunning)}
@@ -2260,6 +2742,57 @@ export default function Home() {
                 >
                   <span>{showDetailsWhileRunning ? "▲" : "▼"}</span>
                   <span>{showDetailsWhileRunning ? "Hide Mission Details" : "View Steps & Gear"}</span>
+                </button>
+
+                {/* Active Mission Narration Control (Steps-only narration) */}
+                <button
+                  type="button"
+                  onClick={
+                    isGeneratingSpeech && generatingSpeechMode === "steps"
+                      ? undefined
+                      : isPlayingSpeech && activeSpeechMode === "steps"
+                      ? handlePauseNarration
+                      : isSpeechPaused && activeSpeechMode === "steps"
+                      ? handleResumeNarration
+                      : stepsAudioUrl
+                      ? () => handleReplayNarration("steps")
+                      : () => handlePlayNarration("steps")
+                  }
+                  disabled={isGeneratingSpeech && generatingSpeechMode === "steps"}
+                  aria-label={
+                    isGeneratingSpeech && generatingSpeechMode === "steps"
+                      ? "Preparing narration"
+                      : isPlayingSpeech && activeSpeechMode === "steps"
+                      ? "Pause narration"
+                      : isSpeechPaused && activeSpeechMode === "steps"
+                      ? "Resume narration"
+                      : stepsAudioUrl
+                      ? "Read steps again"
+                      : "Read steps aloud"
+                  }
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 transition cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {isGeneratingSpeech && generatingSpeechMode === "steps" ? (
+                    <>
+                      <span className="inline-block animate-spin" aria-hidden="true">⏳</span>
+                      <span>Preparing narration...</span>
+                    </>
+                  ) : isPlayingSpeech && activeSpeechMode === "steps" ? (
+                    <>
+                      <span aria-hidden="true">⏸</span>
+                      <span>Pause Narration</span>
+                    </>
+                  ) : isSpeechPaused && activeSpeechMode === "steps" ? (
+                    <>
+                      <span aria-hidden="true">▶</span>
+                      <span>Resume Narration</span>
+                    </>
+                  ) : (
+                    <>
+                      <span aria-hidden="true">🔊</span>
+                      <span>{stepsAudioUrl || fullAudioUrl ? "Read Steps Again" : "Read Steps Aloud"}</span>
+                    </>
+                  )}
                 </button>
 
                 <button
@@ -2271,6 +2804,37 @@ export default function Home() {
                   <span>Finish Early</span>
                 </button>
               </div>
+
+              {/* Active Narration Secondary Controls (Restart / Stop) */}
+              {stepsAudioUrl && (activeSpeechMode === "steps" && (isPlayingSpeech || isSpeechPaused)) && (
+                <div className="inline-flex items-center justify-center gap-2 pt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                  <button
+                    type="button"
+                    onClick={() => handleReplayNarration("steps")}
+                    aria-label="Restart narration"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 text-[11px] font-semibold transition cursor-pointer"
+                  >
+                    <span aria-hidden="true">↺</span>
+                    <span>Restart</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleStopNarration}
+                    aria-label="Stop narration"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg hover:text-zinc-800 dark:hover:text-zinc-200 text-[11px] transition cursor-pointer"
+                  >
+                    <span aria-hidden="true">⏹</span>
+                    <span>Stop</span>
+                  </button>
+                </div>
+              )}
+
+              {speechError && (
+                <div className="max-w-md mx-auto p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-xs text-rose-700 dark:text-rose-300 flex items-center justify-center gap-2">
+                  <span>⚠️</span>
+                  <span>{speechError}</span>
+                </div>
+              )}
 
               {/* Expandable Mission Details (Steps, Gear, Safety) */}
               {showDetailsWhileRunning && (
