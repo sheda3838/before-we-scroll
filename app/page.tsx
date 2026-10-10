@@ -7,6 +7,13 @@ import {
   SpaceSize,
 } from "@/types/missionContext";
 import { Mission } from "@/types/mission";
+import {
+  FeedbackRating,
+  ContextMatchOption,
+  InstructionAccuracyOption,
+  DifficultyOption,
+  CompletedMissionFeedbackSubmission,
+} from "@/types/feedback";
 import { unlockAudio, playNearEndWarningSound, playMissionCompleteSound } from "@/lib/soundEffects";
 import {
   ACTIVE_MISSION_STORAGE_KEY,
@@ -99,6 +106,25 @@ export default function Home() {
 
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
+
+  // Mission Completion Feedback State
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [feedbackRating, setFeedbackRating] = useState<FeedbackRating | null>(5);
+  const [feedbackContextMatch, setFeedbackContextMatch] = useState<ContextMatchOption | null>(null);
+  const [feedbackInstructionsAccurate, setFeedbackInstructionsAccurate] = useState<InstructionAccuracyOption | null>(null);
+  const [feedbackDifficulty, setFeedbackDifficulty] = useState<DifficultyOption | null>(null);
+  const [feedbackComment, setFeedbackComment] = useState("");
+  const [feedbackPhoto, setFeedbackPhoto] = useState<File | null>(null);
+  const [feedbackPhotoPreviewUrl, setFeedbackPhotoPreviewUrl] = useState<string | null>(null);
+  const [feedbackPhotoError, setFeedbackPhotoError] = useState<string | null>(null);
+  const [shareFeedbackPublicly, setShareFeedbackPublicly] = useState(true);
+  const [sharePhotoPublicly, setSharePhotoPublicly] = useState(false);
+  const [feedbackValidationError, setFeedbackValidationError] = useState<string | null>(null);
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  const [submittedFeedback, setSubmittedFeedback] = useState<CompletedMissionFeedbackSubmission | null>(null);
+
+  const feedbackCameraInputRef = useRef<HTMLInputElement>(null);
+  const feedbackGalleryInputRef = useRef<HTMLInputElement>(null);
 
   // Restore active mission from localStorage (survives browser refresh)
   useEffect(() => {
@@ -222,6 +248,15 @@ export default function Home() {
     };
   }, [imagePreviewUrl]);
 
+  // Clean up completion photo preview object URL on unmount or file change
+  useEffect(() => {
+    return () => {
+      if (feedbackPhotoPreviewUrl) {
+        URL.revokeObjectURL(feedbackPhotoPreviewUrl);
+      }
+    };
+  }, [feedbackPhotoPreviewUrl]);
+
   // Clean up microphone media stream and recording timer on unmount
   useEffect(() => {
     return () => {
@@ -243,11 +278,116 @@ export default function Home() {
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
+  const resetFeedbackState = () => {
+    setIsFeedbackOpen(false);
+    setFeedbackRating(5);
+    setFeedbackContextMatch(null);
+    setFeedbackInstructionsAccurate(null);
+    setFeedbackDifficulty(null);
+    setFeedbackComment("");
+    if (feedbackPhotoPreviewUrl) {
+      URL.revokeObjectURL(feedbackPhotoPreviewUrl);
+    }
+    setFeedbackPhoto(null);
+    setFeedbackPhotoPreviewUrl(null);
+    setFeedbackPhotoError(null);
+    setShareFeedbackPublicly(true);
+    setSharePhotoPublicly(false);
+    setFeedbackValidationError(null);
+    setFeedbackSubmitted(false);
+    setSubmittedFeedback(null);
+  };
+
+  const handleFeedbackPhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setFeedbackPhotoError(null);
+
+    const validMimes = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
+    if (!validMimes.includes(file.type)) {
+      setFeedbackPhotoError("Please choose a valid JPEG, PNG, or WebP photo.");
+      e.target.value = "";
+      return;
+    }
+
+    // 10MB limit
+    if (file.size > 10 * 1024 * 1024) {
+      setFeedbackPhotoError("This photo is larger than 10MB. Please choose a smaller file.");
+      e.target.value = "";
+      return;
+    }
+
+    if (feedbackPhotoPreviewUrl) {
+      URL.revokeObjectURL(feedbackPhotoPreviewUrl);
+    }
+
+    const preview = URL.createObjectURL(file);
+    setFeedbackPhoto(file);
+    setFeedbackPhotoPreviewUrl(preview);
+    e.target.value = "";
+  };
+
+  const handleRemoveFeedbackPhoto = () => {
+    if (feedbackPhotoPreviewUrl) {
+      URL.revokeObjectURL(feedbackPhotoPreviewUrl);
+    }
+    setFeedbackPhoto(null);
+    setFeedbackPhotoPreviewUrl(null);
+    setFeedbackPhotoError(null);
+    setSharePhotoPublicly(false);
+  };
+
+  const handleToggleShareFeedback = (checked: boolean) => {
+    setShareFeedbackPublicly(checked);
+    if (!checked) {
+      setSharePhotoPublicly(false);
+    }
+  };
+
+  const handleSubmitFeedback = (e: React.FormEvent) => {
+    e.preventDefault();
+    setFeedbackValidationError(null);
+
+    if (!feedbackRating) {
+      setFeedbackValidationError("Please select an overall rating (1 to 5 stars).");
+      return;
+    }
+
+    if (!selectedMission) return;
+
+    const submission: CompletedMissionFeedbackSubmission = {
+      mission: {
+        id: selectedMission.id,
+        title: selectedMission.title,
+        shortDescription: selectedMission.shortDescription,
+        durationMinutes: selectedMission.durationMinutes,
+        intensity: selectedMission.intensity,
+        players: selectedMission.players,
+      },
+      feedback: {
+        rating: feedbackRating,
+        contextMatch: feedbackContextMatch,
+        instructionsAccurate: feedbackInstructionsAccurate,
+        difficulty: feedbackDifficulty,
+        comment: feedbackComment.trim(),
+        shareFeedbackPublicly,
+        sharePhotoPublicly: shareFeedbackPublicly ? sharePhotoPublicly : false,
+      },
+      completionPhoto: feedbackPhoto,
+      completedAt: new Date().toISOString(),
+    };
+
+    setSubmittedFeedback(submission);
+    setFeedbackSubmitted(true);
+  };
+
   const clearMissions = () => {
     // Preserve active running mission if in progress
     if (missionStartedAt && !missionCompleted) {
       return;
     }
+    resetFeedbackState();
     setGeneratedMissions([]);
     setSelectedMission(null);
     setMissionGenerationError(null);
@@ -267,6 +407,7 @@ export default function Home() {
 
   const handleStartMission = () => {
     if (!selectedMission) return;
+    resetFeedbackState();
     unlockAudio();
     const now = Date.now();
     const end = now + selectedMission.durationMinutes * 60 * 1000;
@@ -320,6 +461,7 @@ export default function Home() {
       clearInterval(missionIntervalRef.current);
       missionIntervalRef.current = null;
     }
+    resetFeedbackState();
     setMissionStartedAt(null);
     setMissionExpectedEndAt(null);
     setMissionRemainingMs(0);
@@ -736,6 +878,25 @@ export default function Home() {
           onChange={handleFileSelect}
           className="hidden"
           id="gallery-input"
+        />
+
+        {/* Hidden File Inputs for Completion Photo */}
+        <input
+          ref={feedbackCameraInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={handleFeedbackPhotoSelect}
+          className="hidden"
+          id="feedback-camera-input"
+        />
+        <input
+          ref={feedbackGalleryInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={handleFeedbackPhotoSelect}
+          className="hidden"
+          id="feedback-gallery-input"
         />
 
         {/* Header (hidden while mission is executing or completed) */}
@@ -2073,84 +2234,566 @@ export default function Home() {
           </section>
         )}
 
-        {/* Mission Complete View */}
+        {/* Mission Complete & Feedback Experience */}
         {selectedMission && missionCompleted && (
           <section id="mission-complete-view" className="space-y-5 animate-fadeIn">
-            <div className="p-8 sm:p-12 rounded-3xl bg-white dark:bg-zinc-900 border border-emerald-300 dark:border-emerald-800/80 shadow-lg text-center space-y-6">
-              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 text-4xl shadow-inner mx-auto">
-                🎉
-              </div>
+            {/* 1. Summary / Celebration State (before opening feedback form) */}
+            {!isFeedbackOpen && !feedbackSubmitted && (
+              <div className="p-8 sm:p-12 rounded-3xl bg-white dark:bg-zinc-900 border border-emerald-300 dark:border-emerald-800/80 shadow-lg text-center space-y-6">
+                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 text-4xl shadow-inner mx-auto">
+                  🎉
+                </div>
 
-              <div className="space-y-2">
-                <h2 className="text-3xl sm:text-4xl font-extrabold text-zinc-900 dark:text-zinc-50 tracking-tight">
-                  Mission Complete!
-                </h2>
-                <p className="text-sm text-zinc-600 dark:text-zinc-300 max-w-md mx-auto leading-relaxed">
-                  You made it to the end. Outstanding outventure with your group!
-                </p>
-              </div>
+                <div className="space-y-2">
+                  <h2 className="text-3xl sm:text-4xl font-extrabold text-zinc-900 dark:text-zinc-50 tracking-tight">
+                    Mission Complete!
+                  </h2>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-300 max-w-md mx-auto leading-relaxed">
+                    You made it to the end. Outstanding outventure with your group!
+                  </p>
+                </div>
 
-              {/* Completed Recap Card */}
-              <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-800 max-w-md mx-auto space-y-1.5">
-                <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">
-                  {selectedMission.title}
-                </h3>
-                <div className="flex items-center justify-center gap-2 flex-wrap text-xs text-zinc-500 dark:text-zinc-400">
-                  <span>⏱️ {selectedMission.durationMinutes} min completed</span>
-                  <span>•</span>
-                  <span>👥 {selectedMission.players}</span>
-                  <span>•</span>
-                  <span className="capitalize">{selectedMission.intensity} intensity</span>
+                {/* Completed Recap Card */}
+                <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-800 max-w-md mx-auto space-y-1.5">
+                  <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">
+                    {selectedMission.title}
+                  </h3>
+                  <div className="flex items-center justify-center gap-2 flex-wrap text-xs text-zinc-500 dark:text-zinc-400">
+                    <span>⏱️ {selectedMission.durationMinutes} min completed</span>
+                    <span>•</span>
+                    <span>👥 {selectedMission.players}</span>
+                    <span>•</span>
+                    <span className="capitalize">{selectedMission.intensity} intensity</span>
+                  </div>
+                </div>
+
+                {/* Expandable Review Steps */}
+                <div className="max-w-md mx-auto">
+                  <button
+                    type="button"
+                    onClick={() => setShowDetailsWhileRunning(!showDetailsWhileRunning)}
+                    className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
+                  >
+                    {showDetailsWhileRunning ? "▲ Hide Mission Steps" : "▼ Review Mission Steps"}
+                  </button>
+
+                  {showDetailsWhileRunning && (
+                    <div className="mt-4 p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-800 text-left space-y-2 text-xs text-zinc-700 dark:text-zinc-300">
+                      <ol className="space-y-1.5 list-decimal list-inside">
+                        {selectedMission.steps.map((st, i) => (
+                          <li key={i}>{st}</li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
+                </div>
+
+                {/* Primary Feedback CTA */}
+                <div className="pt-2 flex flex-col items-center gap-3">
+                  <button
+                    id="leave-feedback-btn"
+                    type="button"
+                    onClick={() => {
+                      setIsFeedbackOpen(true);
+                      setFeedbackRating((prev) => prev ?? 5);
+                    }}
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-extrabold text-sm shadow-md hover:shadow-lg transition cursor-pointer"
+                  >
+                    <span>⭐</span>
+                    <span>Leave Feedback</span>
+                  </button>
+
+                  {/* Secondary Navigation Actions */}
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full sm:w-auto pt-2">
+                    <button
+                      type="button"
+                      onClick={handleBackToMissions}
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 font-semibold text-xs border border-zinc-200 dark:border-zinc-700 transition cursor-pointer"
+                    >
+                      <span>🎯</span>
+                      <span>Back to Missions</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleBackToMissions();
+                        setExtractedContext(null);
+                        setGeneratedMissions([]);
+                        setSelectedMission(null);
+                      }}
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 font-semibold text-xs border border-zinc-200 dark:border-zinc-700 transition cursor-pointer"
+                    >
+                      <span>🌱</span>
+                      <span>Plan New Outventure</span>
+                    </button>
+                  </div>
                 </div>
               </div>
+            )}
 
-              {/* Expandable Review Steps */}
-              <div className="max-w-md mx-auto">
+            {/* 2. Feedback Form View */}
+            {isFeedbackOpen && !feedbackSubmitted && (
+              <div className="p-6 sm:p-10 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-lg space-y-6">
+                {/* Back to Summary */}
                 <button
                   type="button"
-                  onClick={() => setShowDetailsWhileRunning(!showDetailsWhileRunning)}
-                  className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
+                  onClick={() => setIsFeedbackOpen(false)}
+                  className="inline-flex items-center gap-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
                 >
-                  {showDetailsWhileRunning ? "▲ Hide Mission Steps" : "▼ Review Mission Steps"}
+                  <span>←</span>
+                  <span>Back to Summary</span>
                 </button>
 
-                {showDetailsWhileRunning && (
-                  <div className="mt-4 p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-800 text-left space-y-2 text-xs text-zinc-700 dark:text-zinc-300">
-                    <ol className="space-y-1.5 list-decimal list-inside">
-                      {selectedMission.steps.map((st, i) => (
-                        <li key={i}>{st}</li>
-                      ))}
-                    </ol>
+                {/* Form Header */}
+                <div className="space-y-2 border-b border-zinc-100 dark:border-zinc-800 pb-5">
+                  <h2 className="text-2xl sm:text-3xl font-extrabold text-zinc-900 dark:text-zinc-50 tracking-tight">
+                    Share Your Experience
+                  </h2>
+                  <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                    Help us calibrate accuracy, difficulty, and fun for future missions.
+                  </p>
+
+                  {/* Compact Mission Reference Banner */}
+                  <div className="p-3 mt-3 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/40 flex items-center justify-between flex-wrap gap-2 text-xs">
+                    <span className="font-bold text-emerald-900 dark:text-emerald-200">
+                      🎯 {selectedMission.title}
+                    </span>
+                    <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300 font-medium text-[11px]">
+                      <span>⏱️ {selectedMission.durationMinutes}m</span>
+                      <span>•</span>
+                      <span className="capitalize">⚡ {selectedMission.intensity}</span>
+                      <span>•</span>
+                      <span>👥 {selectedMission.players}</span>
+                    </div>
                   </div>
-                )}
-              </div>
+                </div>
 
-              {/* Actions */}
-              <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
-                <button
-                  type="button"
-                  onClick={handleBackToMissions}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-sm shadow-md transition cursor-pointer"
-                >
-                  <span>🎯</span>
-                  <span>Back to Missions</span>
-                </button>
+                {/* Feedback Form */}
+                <form onSubmit={handleSubmitFeedback} className="space-y-6 text-left">
+                  {/* Question 1: Star Rating (Required) */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-bold text-zinc-900 dark:text-zinc-100">
+                      How was your mission? <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="flex items-center gap-1.5 sm:gap-2" role="radiogroup" aria-label="Mission rating">
+                      {[1, 2, 3, 4, 5].map((star) => {
+                        const isSelected = feedbackRating !== null && feedbackRating >= star;
+                        return (
+                          <button
+                            key={star}
+                            type="button"
+                            onClick={() => {
+                              setFeedbackRating(star as FeedbackRating);
+                              setFeedbackValidationError(null);
+                            }}
+                            aria-label={`Rate ${star} out of 5 stars`}
+                            aria-checked={feedbackRating === star}
+                            role="radio"
+                            className={`p-2 sm:p-2.5 rounded-xl transition text-2xl sm:text-3xl cursor-pointer ${
+                              isSelected
+                                ? "text-amber-400 bg-amber-50/80 dark:bg-amber-950/40 hover:scale-110"
+                                : "text-zinc-300 dark:text-zinc-700 hover:text-amber-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                            }`}
+                          >
+                            ★
+                          </button>
+                        );
+                      })}
+                      {feedbackRating !== null && (
+                        <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 ml-2">
+                          {feedbackRating} / 5
+                        </span>
+                      )}
+                    </div>
+                  </div>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleBackToMissions();
-                    setExtractedContext(null);
-                    setGeneratedMissions([]);
-                    setSelectedMission(null);
-                  }}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 font-semibold text-xs border border-zinc-200 dark:border-zinc-700 transition cursor-pointer"
-                >
-                  <span>🌱</span>
-                  <span>Plan New Outventure</span>
-                </button>
+                  {/* Question 2: Context Match */}
+                  <div className="space-y-1.5 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                    <span className="block text-xs font-bold text-zinc-800 dark:text-zinc-200">
+                      Was this mission a good match for your situation?
+                    </span>
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                      Considering your group size, available time, space, and equipment.
+                    </p>
+                    <div className="flex gap-2 pt-1">
+                      {(["yes", "mostly", "no"] as const).map((opt) => (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() => setFeedbackContextMatch(opt)}
+                          className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold transition cursor-pointer capitalize ${
+                            feedbackContextMatch === opt
+                              ? "bg-emerald-600 text-white shadow-xs"
+                              : "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700"
+                          }`}
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Question 3: Instructions Accuracy */}
+                  <div className="space-y-1.5 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                    <span className="block text-xs font-bold text-zinc-800 dark:text-zinc-200">
+                      Were the instructions accurate and easy to follow?
+                    </span>
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                      Were the steps practical and understandable in your environment?
+                    </p>
+                    <div className="flex gap-2 pt-1">
+                      {(["yes", "mostly", "no"] as const).map((opt) => (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() => setFeedbackInstructionsAccurate(opt)}
+                          className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold transition cursor-pointer capitalize ${
+                            feedbackInstructionsAccurate === opt
+                              ? "bg-emerald-600 text-white shadow-xs"
+                              : "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700"
+                          }`}
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Question 4: Difficulty */}
+                  <div className="space-y-1.5 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                    <span className="block text-xs font-bold text-zinc-800 dark:text-zinc-200">
+                      How did the mission feel?
+                    </span>
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                      Helps calibrate physical intensity and pacing.
+                    </p>
+                    <div className="flex gap-2 pt-1">
+                      {([
+                        { val: "too-easy", label: "Too Easy" },
+                        { val: "just-right", label: "Just Right" },
+                        { val: "too-hard", label: "Too Hard" },
+                      ] as const).map((opt) => (
+                        <button
+                          key={opt.val}
+                          type="button"
+                          onClick={() => setFeedbackDifficulty(opt.val)}
+                          className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold transition cursor-pointer ${
+                            feedbackDifficulty === opt.val
+                              ? "bg-emerald-600 text-white shadow-xs"
+                              : "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700"
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Question 5: Optional Written Comment */}
+                  <div className="space-y-1.5 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                    <div className="flex items-center justify-between">
+                      <label htmlFor="feedback-comment" className="block text-xs font-bold text-zinc-800 dark:text-zinc-200">
+                        Anything else you&apos;d like to share?
+                      </label>
+                      <span className="text-[11px] text-zinc-400">
+                        {1000 - feedbackComment.length} chars left
+                      </span>
+                    </div>
+                    <textarea
+                      id="feedback-comment"
+                      rows={3}
+                      maxLength={1000}
+                      value={feedbackComment}
+                      onChange={(e) => setFeedbackComment(e.target.value)}
+                      placeholder="What worked well, what could be better, or anything surprising..."
+                      className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-800/50 px-3.5 py-2.5 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition resize-y"
+                    />
+                  </div>
+
+                  {/* Question 6: Optional Completion Photo */}
+                  <div className="space-y-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                    <label className="block text-xs font-bold text-zinc-800 dark:text-zinc-200">
+                      Add a completion photo (Optional)
+                    </label>
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                      Share a photo from your Outventure if you&apos;d like.
+                    </p>
+
+                    {!feedbackPhoto ? (
+                      <div>
+                        {isTouchDevice ? (
+                          <div className="grid grid-cols-2 gap-3 pt-1">
+                            <button
+                              type="button"
+                              onClick={() => feedbackCameraInputRef.current?.click()}
+                              className="flex flex-col items-center justify-center p-3.5 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 hover:border-emerald-500 bg-zinc-50/50 dark:bg-zinc-800/40 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/20 transition cursor-pointer group"
+                            >
+                              <span className="text-xl mb-1 group-hover:scale-110 transition-transform">📷</span>
+                              <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-200">Take Photo</span>
+                              <span className="text-[10px] text-zinc-400">Rear camera</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => feedbackGalleryInputRef.current?.click()}
+                              className="flex flex-col items-center justify-center p-3.5 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 hover:border-emerald-500 bg-zinc-50/50 dark:bg-zinc-800/40 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/20 transition cursor-pointer group"
+                            >
+                              <span className="text-xl mb-1 group-hover:scale-110 transition-transform">🖼️</span>
+                              <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-200">Choose Photo</span>
+                              <span className="text-[10px] text-zinc-400">From gallery</span>
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => feedbackGalleryInputRef.current?.click()}
+                            className="w-full flex flex-col items-center justify-center p-4 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 hover:border-emerald-500 bg-zinc-50/50 dark:bg-zinc-800/40 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/20 transition cursor-pointer group"
+                          >
+                            <span className="text-xl mb-1 group-hover:scale-110 transition-transform">🖼️</span>
+                            <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-200">Choose Photo</span>
+                            <span className="text-[10px] text-zinc-400 mt-0.5">JPEG, PNG, or WebP up to 10MB</span>
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      /* Selected Photo Preview */
+                      <div className="relative rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 p-3 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          {feedbackPhotoPreviewUrl && (
+                            <div className="relative w-12 h-12 rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-700 flex-shrink-0 bg-zinc-100 dark:bg-zinc-800">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={feedbackPhotoPreviewUrl}
+                                alt="Selected completion photo preview"
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <p className="text-xs font-semibold text-zinc-800 dark:text-zinc-200 truncate">
+                              {feedbackPhoto.name}
+                            </p>
+                            <p className="text-[11px] text-zinc-400">
+                              {formatFileSize(feedbackPhoto.size)}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => feedbackGalleryInputRef.current?.click()}
+                            className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer font-medium"
+                          >
+                            Change
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleRemoveFeedbackPhoto}
+                            className="p-1 rounded-lg text-zinc-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
+                            title="Remove photo"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {feedbackPhotoError && (
+                      <p className="text-xs text-rose-500 flex items-center gap-1">
+                        <span>⚠️</span>
+                        <span>{feedbackPhotoError}</span>
+                      </p>
+                    )}
+
+                    {/* Purpose explanation */}
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400 italic pt-1">
+                      If you choose to share your feedback publicly, your photo may be shown with your completed mission to help inspire other Outventure AI visitors.
+                    </p>
+                  </div>
+
+                  {/* Public Sharing Consent Section */}
+                  <div className="space-y-3 pt-3 border-t border-zinc-100 dark:border-zinc-800">
+                    <span className="block text-xs font-bold text-zinc-800 dark:text-zinc-200">
+                      Community Sharing Preferences
+                    </span>
+
+                    {/* 1. Public Feedback Consent Checkbox */}
+                    <label className="flex items-start gap-3 p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/60 dark:border-zinc-800 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={shareFeedbackPublicly}
+                        onChange={(e) => handleToggleShareFeedback(e.target.checked)}
+                        className="mt-0.5 rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                      />
+                      <div className="space-y-0.5 text-xs">
+                        <span className="font-semibold text-zinc-800 dark:text-zinc-200 block">
+                          Share my feedback publicly
+                        </span>
+                        <span className="text-[11px] text-zinc-500 dark:text-zinc-400 block leading-relaxed">
+                          My rating, comment, and completed mission may be shown to other Outventure AI visitors.
+                        </span>
+                      </div>
+                    </label>
+
+                    {/* 2. Public Photo Consent Checkbox (Separate, only if photo uploaded and feedback public) */}
+                    {feedbackPhoto && shareFeedbackPublicly && (
+                      <label className="flex items-start gap-3 p-3 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/40 cursor-pointer animate-fadeIn">
+                        <input
+                          type="checkbox"
+                          checked={sharePhotoPublicly}
+                          onChange={(e) => setSharePhotoPublicly(e.target.checked)}
+                          className="mt-0.5 rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                        />
+                        <div className="space-y-0.5 text-xs">
+                          <span className="font-semibold text-emerald-900 dark:text-emerald-200 block">
+                            Allow my photo to be shown publicly
+                          </span>
+                          <span className="text-[11px] text-emerald-800/80 dark:text-emerald-300/80 block leading-relaxed">
+                            If selected, the uploaded completion photo may appear with my public feedback.
+                          </span>
+                        </div>
+                      </label>
+                    )}
+                  </div>
+
+                  {/* Validation Error Banner */}
+                  {feedbackValidationError && (
+                    <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-xs text-rose-700 dark:text-rose-300 flex items-center gap-2">
+                      <span>⚠️</span>
+                      <span>{feedbackValidationError}</span>
+                    </div>
+                  )}
+
+                  {/* Form Actions */}
+                  <div className="pt-2 flex flex-col sm:flex-row items-center justify-end gap-3 border-t border-zinc-100 dark:border-zinc-800">
+                    <button
+                      type="button"
+                      onClick={() => setIsFeedbackOpen(false)}
+                      className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+
+                    <button
+                      type="submit"
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-xs shadow-md transition cursor-pointer"
+                    >
+                      <span>Submit Feedback</span>
+                      <span>✓</span>
+                    </button>
+                  </div>
+                </form>
               </div>
-            </div>
+            )}
+
+            {/* 3. Thank-You State (after local feedback submission) */}
+            {feedbackSubmitted && submittedFeedback && (
+              <div className="p-8 sm:p-12 rounded-3xl bg-white dark:bg-zinc-900 border border-emerald-300 dark:border-emerald-800/80 shadow-lg text-center space-y-6">
+                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 text-4xl shadow-inner mx-auto">
+                  💚
+                </div>
+
+                <div className="space-y-2">
+                  <h2 className="text-3xl sm:text-4xl font-extrabold text-zinc-900 dark:text-zinc-50 tracking-tight">
+                    Thanks for sharing your feedback!
+                  </h2>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-300 max-w-md mx-auto leading-relaxed">
+                    Your feedback helps improve future Outventures.
+                  </p>
+                </div>
+
+                {/* Rating Recap */}
+                <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-800 max-w-md mx-auto space-y-2 text-xs">
+                  <div className="flex items-center justify-center gap-1 text-amber-400 text-lg">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <span key={star}>
+                        {submittedFeedback.feedback.rating >= star ? "★" : "☆"}
+                      </span>
+                    ))}
+                    <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300 ml-2">
+                      ({submittedFeedback.feedback.rating} / 5)
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-center gap-2 flex-wrap pt-1 text-[11px] text-zinc-500 dark:text-zinc-400">
+                    {submittedFeedback.feedback.contextMatch && (
+                      <span className="capitalize">
+                        Match: {submittedFeedback.feedback.contextMatch}
+                      </span>
+                    )}
+                    {submittedFeedback.feedback.instructionsAccurate && (
+                      <>
+                        <span>•</span>
+                        <span className="capitalize">
+                          Instructions: {submittedFeedback.feedback.instructionsAccurate}
+                        </span>
+                      </>
+                    )}
+                    {submittedFeedback.feedback.difficulty && (
+                      <>
+                        <span>•</span>
+                        <span className="capitalize">
+                          Feel: {submittedFeedback.feedback.difficulty.replace("-", " ")}
+                        </span>
+                      </>
+                    )}
+                  </div>
+
+                  {submittedFeedback.feedback.comment && (
+                    <p className="text-[11px] text-zinc-600 dark:text-zinc-300 italic pt-1 border-t border-zinc-200/60 dark:border-zinc-700/60">
+                      &ldquo;{submittedFeedback.feedback.comment}&rdquo;
+                    </p>
+                  )}
+                </div>
+
+                {/* Consent Status Messages */}
+                <div className="max-w-md mx-auto space-y-1.5 text-xs text-emerald-800 dark:text-emerald-300 font-medium">
+                  {submittedFeedback.feedback.shareFeedbackPublicly ? (
+                    <p className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60">
+                      ✓ You&apos;ve chosen to allow this feedback to be considered for public sharing.
+                    </p>
+                  ) : (
+                    <p className="text-zinc-400 dark:text-zinc-500 text-[11px]">
+                      Your feedback will remain private.
+                    </p>
+                  )}
+
+                  {submittedFeedback.feedback.sharePhotoPublicly && (
+                    <p className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60">
+                      ✓ Your uploaded photo may also be shown with your feedback.
+                    </p>
+                  )}
+                </div>
+
+                {/* Navigation Actions */}
+                <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleBackToMissions}
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-sm shadow-md transition cursor-pointer"
+                  >
+                    <span>🎯</span>
+                    <span>Back to Missions</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleBackToMissions();
+                      setExtractedContext(null);
+                      setGeneratedMissions([]);
+                      setSelectedMission(null);
+                    }}
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 font-semibold text-xs border border-zinc-200 dark:border-zinc-700 transition cursor-pointer"
+                  >
+                    <span>🌱</span>
+                    <span>Plan New Outventure</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </section>
         )}
       </div>
