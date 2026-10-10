@@ -1218,3 +1218,63 @@ export type Mission = {
 export type MissionGenerationResponse = {
   missions: Mission[];
 };
+
+
+# Phase 5A — Mission Execution & Countdown Timer
+
+**Status:** Completed
+
+## Goal
+
+Phase 5A added the mission execution experience after the user selects a generated mission.
+
+The completed flow is:
+
+**Mission Detail**
+→ **Start Mission**
+→ **Active Mission Countdown**
+→ **View Steps & Gear while timer continues**
+→ **Near-End Warning**
+→ **Final Alarm**
+→ **Mission Complete**
+
+This phase intentionally does not include TTS, persistence to MongoDB, ratings, feedback, or notifications.
+
+---
+
+## Start Mission
+
+The selected mission detail view now includes a primary:
+
+**Start Mission**
+
+action.
+
+Starting a mission:
+
+1. records the current timestamp
+2. calculates the expected end timestamp from the mission duration
+3. initializes execution state
+4. stores the active mission in localStorage
+5. opens the active mission execution view
+
+Starting a mission makes:
+
+- **0 Gemini calls**
+- **0 ElevenLabs calls**
+
+The selected mission object generated in Phase 4 is reused directly.
+
+---
+
+## Timestamp-Based Timer Architecture
+
+The timer uses timestamps rather than decrementing a counter as the source of truth.
+
+When a mission begins:
+
+```ts
+startedAt = Date.now();
+
+expectedEndAt =
+  startedAt + selectedMission.durationMinutes * 60 * 1000;

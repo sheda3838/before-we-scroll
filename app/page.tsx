@@ -7,6 +7,15 @@ import {
   SpaceSize,
 } from "@/types/missionContext";
 import { Mission } from "@/types/mission";
+import { unlockAudio, playNearEndWarningSound, playMissionCompleteSound } from "@/lib/soundEffects";
+import {
+  ACTIVE_MISSION_STORAGE_KEY,
+  StoredActiveMission,
+  getWarningThresholdMs,
+  getWarningLabel,
+  formatCountdown,
+  formatAccessibleTime,
+} from "@/lib/timerUtils";
 
 function subscribeToTouch(callback: () => void) {
   if (typeof window === "undefined") return () => {};
@@ -62,6 +71,16 @@ export default function Home() {
   const [missionGenerationError, setMissionGenerationError] = useState<string | null>(null);
   const [missionLatencyMs, setMissionLatencyMs] = useState<number | null>(null);
 
+  // Active Mission & Timer Execution State
+  const [missionStartedAt, setMissionStartedAt] = useState<number | null>(null);
+  const [missionExpectedEndAt, setMissionExpectedEndAt] = useState<number | null>(null);
+  const [missionRemainingMs, setMissionRemainingMs] = useState<number>(0);
+  const [missionCompleted, setMissionCompleted] = useState<boolean>(false);
+  const [warningTriggered, setWarningTriggered] = useState<boolean>(false);
+  const [showDetailsWhileRunning, setShowDetailsWhileRunning] = useState<boolean>(false);
+
+  const missionIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
   // Voice Recording & Transcription State
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -81,6 +100,119 @@ export default function Home() {
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
+  // Restore active mission from localStorage (survives browser refresh)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      try {
+        const raw = localStorage.getItem(ACTIVE_MISSION_STORAGE_KEY);
+        if (!raw) return;
+        const data: StoredActiveMission = JSON.parse(raw);
+        if (data?.mission && typeof data.startedAt === "number" && typeof data.expectedEndAt === "number") {
+          setSelectedMission(data.mission);
+          setMissionStartedAt(data.startedAt);
+          setMissionExpectedEndAt(data.expectedEndAt);
+
+          const now = Date.now();
+          if (data.expectedEndAt > now) {
+            setMissionRemainingMs(data.expectedEndAt - now);
+            setMissionCompleted(false);
+            setWarningTriggered(Boolean(data.warningTriggered));
+          } else {
+            // Expected end timestamp already passed while user was away
+            setMissionRemainingMs(0);
+            setMissionCompleted(true);
+            try {
+              localStorage.removeItem(ACTIVE_MISSION_STORAGE_KEY);
+            } catch {
+              // ignore
+            }
+          }
+        }
+      } catch {
+        try {
+          localStorage.removeItem(ACTIVE_MISSION_STORAGE_KEY);
+        } catch {
+          // ignore
+        }
+      }
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Real-time timestamp countdown & tab wake-up synchronization
+  useEffect(() => {
+    if (!missionStartedAt || !missionExpectedEndAt || missionCompleted) {
+      if (missionIntervalRef.current) {
+        clearInterval(missionIntervalRef.current);
+        missionIntervalRef.current = null;
+      }
+      return;
+    }
+
+    const tick = () => {
+      const now = Date.now();
+      const remaining = Math.max(0, missionExpectedEndAt - now);
+      setMissionRemainingMs(remaining);
+
+      // Warning threshold check (triggers once per mission)
+      if (selectedMission) {
+        const threshold = getWarningThresholdMs(selectedMission.durationMinutes);
+        if (remaining <= threshold && remaining > 0 && !warningTriggered) {
+          setWarningTriggered(true);
+          playNearEndWarningSound();
+
+          // Persist warning status so refresh does not replay audio
+          try {
+            const raw = localStorage.getItem(ACTIVE_MISSION_STORAGE_KEY);
+            if (raw) {
+              const data: StoredActiveMission = JSON.parse(raw);
+              data.warningTriggered = true;
+              localStorage.setItem(ACTIVE_MISSION_STORAGE_KEY, JSON.stringify(data));
+            }
+          } catch {
+            // ignore
+          }
+        }
+      }
+
+      // Completion check at 00:00
+      if (remaining <= 0) {
+        if (missionIntervalRef.current) {
+          clearInterval(missionIntervalRef.current);
+          missionIntervalRef.current = null;
+        }
+        setMissionRemainingMs(0);
+        setMissionCompleted(true);
+        try {
+          localStorage.removeItem(ACTIVE_MISSION_STORAGE_KEY);
+        } catch {
+          // ignore
+        }
+        playMissionCompleteSound();
+      }
+    };
+
+    tick();
+    missionIntervalRef.current = setInterval(tick, 250);
+
+    // Tab inactivity recovery: recalculate immediately upon tab focus
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        tick();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      if (missionIntervalRef.current) {
+        clearInterval(missionIntervalRef.current);
+        missionIntervalRef.current = null;
+      }
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [missionStartedAt, missionExpectedEndAt, missionCompleted, warningTriggered, selectedMission]);
+
   // Clean up object URLs on unmount or file change
   useEffect(() => {
     return () => {
@@ -96,6 +228,9 @@ export default function Home() {
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current);
       }
+      if (missionIntervalRef.current) {
+        clearInterval(missionIntervalRef.current);
+      }
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
       }
@@ -109,10 +244,95 @@ export default function Home() {
   };
 
   const clearMissions = () => {
+    // Preserve active running mission if in progress
+    if (missionStartedAt && !missionCompleted) {
+      return;
+    }
     setGeneratedMissions([]);
     setSelectedMission(null);
     setMissionGenerationError(null);
     setMissionLatencyMs(null);
+    setMissionStartedAt(null);
+    setMissionExpectedEndAt(null);
+    setMissionRemainingMs(0);
+    setMissionCompleted(false);
+    setWarningTriggered(false);
+    setShowDetailsWhileRunning(false);
+    try {
+      localStorage.removeItem(ACTIVE_MISSION_STORAGE_KEY);
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleStartMission = () => {
+    if (!selectedMission) return;
+    unlockAudio();
+    const now = Date.now();
+    const end = now + selectedMission.durationMinutes * 60 * 1000;
+
+    setMissionStartedAt(now);
+    setMissionExpectedEndAt(end);
+    setMissionRemainingMs(end - now);
+    setMissionCompleted(false);
+    setWarningTriggered(false);
+    setShowDetailsWhileRunning(false);
+
+    try {
+      const payload: StoredActiveMission = {
+        mission: selectedMission,
+        startedAt: now,
+        expectedEndAt: end,
+        warningTriggered: false,
+      };
+      localStorage.setItem(ACTIVE_MISSION_STORAGE_KEY, JSON.stringify(payload));
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleFinishEarly = () => {
+    if (!missionStartedAt || missionCompleted) return;
+    if (!window.confirm("Are you sure you want to finish this mission early?")) return;
+
+    if (missionIntervalRef.current) {
+      clearInterval(missionIntervalRef.current);
+      missionIntervalRef.current = null;
+    }
+    setMissionRemainingMs(0);
+    setMissionCompleted(true);
+    try {
+      localStorage.removeItem(ACTIVE_MISSION_STORAGE_KEY);
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleBackToMissions = () => {
+    // If mission is actively running, confirm before stopping
+    if (missionStartedAt && !missionCompleted) {
+      if (!window.confirm("A mission is currently active. Are you sure you want to stop and return to missions?")) {
+        return;
+      }
+    }
+
+    if (missionIntervalRef.current) {
+      clearInterval(missionIntervalRef.current);
+      missionIntervalRef.current = null;
+    }
+    setMissionStartedAt(null);
+    setMissionExpectedEndAt(null);
+    setMissionRemainingMs(0);
+    setMissionCompleted(false);
+    setWarningTriggered(false);
+    setShowDetailsWhileRunning(false);
+    try {
+      localStorage.removeItem(ACTIVE_MISSION_STORAGE_KEY);
+    } catch {
+      // ignore
+    }
+
+    setSelectedMission(null);
   };
 
   const handleGenerateMissions = async () => {
@@ -518,8 +738,10 @@ export default function Home() {
           id="gallery-input"
         />
 
-        {/* Header */}
-        <div className="text-center space-y-2">
+        {/* Header (hidden while mission is executing or completed) */}
+        {!missionStartedAt && (
+          <>
+            <div className="text-center space-y-2">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/70 text-xs font-medium text-emerald-700 dark:text-emerald-400 mb-1">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             Outventure AI
@@ -811,9 +1033,11 @@ export default function Home() {
             </div>
           )}
         </div>
+          </>
+        )}
 
-        {/* Confirmation Screen */}
-        {extractedContext && (
+        {/* Confirmation Screen (hidden while mission is executing or completed) */}
+        {extractedContext && !missionStartedAt && (
           <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800/80 overflow-hidden divide-y divide-zinc-100 dark:divide-zinc-800">
             {/* Header section */}
             <div className="p-6 pb-5">
@@ -1427,8 +1651,8 @@ export default function Home() {
           </div>
         )}
 
-        {/* 3 Mission Selection Cards */}
-        {generatedMissions.length === 3 && !selectedMission && (
+        {/* 3 Mission Selection Cards (hidden while mission is executing or completed) */}
+        {generatedMissions.length === 3 && !selectedMission && !missionStartedAt && (
           <section id="mission-selection-section" className="space-y-4 pt-2">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div>
@@ -1525,13 +1749,13 @@ export default function Home() {
           </section>
         )}
 
-        {/* Selected Mission Detailed View */}
-        {selectedMission && (
+        {/* Selected Mission Detailed Pre-Start View */}
+        {selectedMission && !missionStartedAt && (
           <section id="mission-detail-view" className="space-y-5">
             {/* Back Button */}
             <button
               type="button"
-              onClick={() => setSelectedMission(null)}
+              onClick={handleBackToMissions}
               className="inline-flex items-center gap-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 cursor-pointer transition"
             >
               <span>←</span>
@@ -1542,13 +1766,26 @@ export default function Home() {
             <div className="bg-white dark:bg-zinc-900 p-6 sm:p-8 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 space-y-6">
               {/* Header */}
               <div className="space-y-3 pb-5 border-b border-zinc-100 dark:border-zinc-800">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800/80 text-xs font-bold text-emerald-700 dark:text-emerald-300">
-                    <span>Active Mission</span>
-                  </span>
-                  <span className="text-xs font-medium text-zinc-400 capitalize">
-                    {selectedMission.intensity} Intensity
-                  </span>
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800/80 text-xs font-bold text-emerald-700 dark:text-emerald-300">
+                      <span>Ready to Start</span>
+                    </span>
+                    <span className="text-xs font-medium text-zinc-400 capitalize">
+                      {selectedMission.intensity} Intensity
+                    </span>
+                  </div>
+
+                  {/* Top Start Mission CTA */}
+                  <button
+                    id="start-mission-btn-header"
+                    type="button"
+                    onClick={handleStartMission}
+                    className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-extrabold text-xs shadow-md hover:shadow-lg transition cursor-pointer"
+                  >
+                    <span>🚀</span>
+                    <span>Start Mission</span>
+                  </button>
                 </div>
 
                 <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">
@@ -1651,6 +1888,268 @@ export default function Home() {
                   </ul>
                 </div>
               )}
+
+              {/* Bottom Start Mission CTA */}
+              <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800 flex justify-center">
+                <button
+                  id="start-mission-btn-bottom"
+                  type="button"
+                  onClick={handleStartMission}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-extrabold text-sm shadow-md hover:shadow-lg transition cursor-pointer"
+                >
+                  <span>🚀</span>
+                  <span>Start Mission</span>
+                </button>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Active Mission Execution / Countdown Timer View */}
+        {selectedMission && missionStartedAt !== null && !missionCompleted && (
+          <section id="active-mission-view" className="space-y-5 animate-fadeIn">
+            {/* Near-end Warning Banner */}
+            {warningTriggered && (
+              <div
+                role="alert"
+                className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/60 border-2 border-amber-400 dark:border-amber-600 text-amber-900 dark:text-amber-200 flex items-center justify-between gap-3 shadow-md animate-pulse"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">⚠️</span>
+                  <div>
+                    <p className="text-sm font-extrabold">
+                      {getWarningLabel(selectedMission.durationMinutes)}
+                    </p>
+                    <p className="text-xs text-amber-800 dark:text-amber-300">
+                      Wrap up your current activity and prepare for the finish!
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Timer Hero Card */}
+            <div
+              className={`p-6 sm:p-10 rounded-3xl bg-white dark:bg-zinc-900 border text-center space-y-6 transition-colors shadow-sm ${
+                warningTriggered
+                  ? "border-amber-400 dark:border-amber-500 shadow-amber-500/10 shadow-xl"
+                  : "border-zinc-200 dark:border-zinc-800"
+              }`}
+            >
+              {/* Header Status */}
+              <div className="space-y-2">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800/80 text-xs font-bold text-emerald-700 dark:text-emerald-300">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                  <span>Mission in Progress</span>
+                </div>
+
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-zinc-900 dark:text-zinc-50 tracking-tight">
+                  {selectedMission.title}
+                </h2>
+
+                <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 max-w-md mx-auto line-clamp-2">
+                  {selectedMission.shortDescription}
+                </p>
+              </div>
+
+              {/* Large Countdown Display */}
+              <div className="py-2">
+                <div
+                  id="mission-countdown-display"
+                  aria-live="polite"
+                  aria-label={formatAccessibleTime(missionRemainingMs)}
+                  className={`font-mono font-black text-6xl sm:text-7xl md:text-8xl tracking-tight transition-colors ${
+                    warningTriggered
+                      ? "text-amber-600 dark:text-amber-400"
+                      : "text-zinc-900 dark:text-zinc-50"
+                  }`}
+                >
+                  {formatCountdown(missionRemainingMs)}
+                </div>
+                <p className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mt-2">
+                  Time Remaining
+                </p>
+
+                {/* Visual Progress Bar */}
+                {missionExpectedEndAt && missionStartedAt && missionExpectedEndAt > missionStartedAt && (
+                  <div className="w-full max-w-xs sm:max-w-md mx-auto h-2.5 bg-zinc-100 dark:bg-zinc-800 rounded-full mt-5 overflow-hidden">
+                    <div
+                      className={`h-full transition-all duration-300 ${
+                        warningTriggered ? "bg-amber-500" : "bg-emerald-500"
+                      }`}
+                      style={{
+                        width: `${Math.min(
+                          100,
+                          Math.max(
+                            0,
+                            (1 - missionRemainingMs / (missionExpectedEndAt - missionStartedAt)) * 100
+                          )
+                        )}%`,
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Controls: Details Toggle & Finish Early */}
+              <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowDetailsWhileRunning(!showDetailsWhileRunning)}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 transition cursor-pointer"
+                >
+                  <span>{showDetailsWhileRunning ? "▲" : "▼"}</span>
+                  <span>{showDetailsWhileRunning ? "Hide Mission Details" : "View Steps & Gear"}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleFinishEarly}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-semibold text-zinc-500 hover:text-rose-600 dark:text-zinc-400 dark:hover:text-rose-400 transition cursor-pointer"
+                >
+                  <span>⏹</span>
+                  <span>Finish Early</span>
+                </button>
+              </div>
+
+              {/* Expandable Mission Details (Steps, Gear, Safety) */}
+              {showDetailsWhileRunning && (
+                <div className="mt-6 pt-6 border-t border-zinc-100 dark:border-zinc-800 text-left space-y-5 animate-fadeIn">
+                  {/* Gear */}
+                  <div className="space-y-1.5">
+                    <h4 className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                      What you&apos;ll need
+                    </h4>
+                    {selectedMission.equipmentNeeded.length > 0 ? (
+                      <p className="text-xs text-zinc-800 dark:text-zinc-200 font-semibold">
+                        🎒 {selectedMission.equipmentNeeded.join(", ")}
+                      </p>
+                    ) : (
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 italic">
+                        ✨ No equipment needed — only your surroundings.
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Steps */}
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                      Mission Steps
+                    </h4>
+                    <ol className="space-y-2">
+                      {selectedMission.steps.map((step, idx) => (
+                        <li
+                          key={idx}
+                          className="flex items-start gap-2.5 p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/60 dark:border-zinc-800 text-xs text-zinc-800 dark:text-zinc-200"
+                        >
+                          <span className="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full bg-emerald-600 text-white font-bold text-[11px]">
+                            {idx + 1}
+                          </span>
+                          <span className="pt-0.5 leading-relaxed">{step}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+
+                  {/* Safety */}
+                  {selectedMission.safetyNotes.length > 0 && (
+                    <div className="space-y-1.5 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                      <h4 className="text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+                        🛡️ Stay Safe
+                      </h4>
+                      <ul className="space-y-1 text-xs text-zinc-600 dark:text-zinc-400">
+                        {selectedMission.safetyNotes.map((note, idx) => (
+                          <li key={idx} className="flex items-start gap-1.5">
+                            <span className="text-amber-500 font-bold">•</span>
+                            <span>{note}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
+        {/* Mission Complete View */}
+        {selectedMission && missionCompleted && (
+          <section id="mission-complete-view" className="space-y-5 animate-fadeIn">
+            <div className="p-8 sm:p-12 rounded-3xl bg-white dark:bg-zinc-900 border border-emerald-300 dark:border-emerald-800/80 shadow-lg text-center space-y-6">
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 text-4xl shadow-inner mx-auto">
+                🎉
+              </div>
+
+              <div className="space-y-2">
+                <h2 className="text-3xl sm:text-4xl font-extrabold text-zinc-900 dark:text-zinc-50 tracking-tight">
+                  Mission Complete!
+                </h2>
+                <p className="text-sm text-zinc-600 dark:text-zinc-300 max-w-md mx-auto leading-relaxed">
+                  You made it to the end. Outstanding outventure with your group!
+                </p>
+              </div>
+
+              {/* Completed Recap Card */}
+              <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-800 max-w-md mx-auto space-y-1.5">
+                <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">
+                  {selectedMission.title}
+                </h3>
+                <div className="flex items-center justify-center gap-2 flex-wrap text-xs text-zinc-500 dark:text-zinc-400">
+                  <span>⏱️ {selectedMission.durationMinutes} min completed</span>
+                  <span>•</span>
+                  <span>👥 {selectedMission.players}</span>
+                  <span>•</span>
+                  <span className="capitalize">{selectedMission.intensity} intensity</span>
+                </div>
+              </div>
+
+              {/* Expandable Review Steps */}
+              <div className="max-w-md mx-auto">
+                <button
+                  type="button"
+                  onClick={() => setShowDetailsWhileRunning(!showDetailsWhileRunning)}
+                  className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
+                >
+                  {showDetailsWhileRunning ? "▲ Hide Mission Steps" : "▼ Review Mission Steps"}
+                </button>
+
+                {showDetailsWhileRunning && (
+                  <div className="mt-4 p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-800 text-left space-y-2 text-xs text-zinc-700 dark:text-zinc-300">
+                    <ol className="space-y-1.5 list-decimal list-inside">
+                      {selectedMission.steps.map((st, i) => (
+                        <li key={i}>{st}</li>
+                      ))}
+                    </ol>
+                  </div>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleBackToMissions}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-sm shadow-md transition cursor-pointer"
+                >
+                  <span>🎯</span>
+                  <span>Back to Missions</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleBackToMissions();
+                    setExtractedContext(null);
+                    setGeneratedMissions([]);
+                    setSelectedMission(null);
+                  }}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 font-semibold text-xs border border-zinc-200 dark:border-zinc-700 transition cursor-pointer"
+                >
+                  <span>🌱</span>
+                  <span>Plan New Outventure</span>
+                </button>
+              </div>
             </div>
           </section>
         )}
