@@ -28,7 +28,7 @@ function getClientPromise(): Promise<MongoClient> {
   }
 }
 
-export async function getDatabase(dbName = "outventure"): Promise<Db> {
+export async function getDatabase(dbName = "before-we-scroll"): Promise<Db> {
   const client = await getClientPromise();
   return client.db(dbName);
 }

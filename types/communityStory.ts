@@ -1,11 +1,11 @@
 /**
- * Public DTO for a community-shared Outventure completion.
+ * Public DTO for a community-shared Before We Scroll completion.
  *
  * Contains ONLY the fields safe to expose to unauthenticated browsers.
  * Never include sessionId, full MissionContext, internal feedback fields,
  * sharing-consent booleans, or MongoDB metadata.
  */
-export type PublicOutventure = {
+export type CommunityStory = {
   id: string;
   missionTitle: string;
   missionShortDescription: string;
@@ -16,3 +16,5 @@ export type PublicOutventure = {
   completedAt: string;
   photoUrl: string | null;
 };
+
+export type PublicBeforeWeScroll = CommunityStory;

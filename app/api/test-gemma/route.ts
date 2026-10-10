@@ -3,7 +3,7 @@ import { GoogleGenAI } from "@google/genai";
 
 const MODEL_NAME = "gemma-4-26b-a4b-it";
 const TEST_PROMPT =
-  "You are the AI engine for Outventure AI. Reply with one short sentence confirming that the Gemma API connection is working.";
+  "You are the AI engine for Before We Scroll. Reply with one short sentence confirming that the Gemma API connection is working.";
 
 export async function POST() {
   const apiKey = process.env.GEMINI_API_KEY;

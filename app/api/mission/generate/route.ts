@@ -10,7 +10,7 @@ import { validateAndNormalizeMissions } from "@/lib/validateMissionPlan";
 const MODEL_NAME = "gemini-3.1-flash-lite";
 
 function buildMissionGenerationPrompt(ctx: MissionContext): string {
-  return `You are the mission generation engine for Outventure AI.
+  return `You are the mission generation engine for Before We Scroll.
 
 Given one confirmed MissionContext, generate EXACTLY 3 distinct, engaging activities (missions) tailored specifically to the user's situation and surroundings.
 

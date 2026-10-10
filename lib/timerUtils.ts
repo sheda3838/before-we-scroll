@@ -1,6 +1,6 @@
 import { Mission } from "@/types/mission";
 
-export const ACTIVE_MISSION_STORAGE_KEY = "outventure-active-mission";
+export const ACTIVE_MISSION_STORAGE_KEY = "before-we-scroll-active-mission";
 
 export interface StoredActiveMission {
   mission: Mission;

@@ -1,26 +1,52 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #faf8f2; /* warm cream / off-white */
+  --foreground: #152219; /* deep forest text */
+  --surface: #ffffff;
+  --surface-raised: #f3efe4;
+  --muted-text: #596a5f;
+  --border-color: #e5e0d3;
+  --brand-deep: #143828; /* deep forest green */
+  --brand-nature: #2a6a4e; /* fresh natural green */
+  --brand-light: #52b788;
+  --brand-mint: #e2f4e9;
+  --brand-sunrise: #e76f51; /* warm sunrise orange */
+  --brand-amber: #f4a261;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.dark {
+  --background: #09120d; /* deep forest-black */
+  --foreground: #eff5f0; /* warm off-white */
+  --surface: #101f16; /* dark forest surface */
+  --surface-raised: #182b20;
+  --muted-text: #9ab0a1;
+  --border-color: #1e3627;
+  --brand-deep: #1a4934;
+  --brand-nature: #3f8f6a;
+  --brand-light: #74c69d;
+  --brand-mint: #173627;
+  --brand-sunrise: #f07b5d;
+  --brand-amber: #e9c46a;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  min-height: 100vh;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Custom smooth scroll & selection */
+::selection {
+  background-color: #52b788;
+  color: #ffffff;
+}
+
+.dark ::selection {
+  background-color: #2a6a4e;
+  color: #ffffff;
 }

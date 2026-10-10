@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCompletionsCollection } from "@/lib/mongodb";
-import type { PublicOutventure } from "@/types/publicOutventure";
+import type { CommunityStory } from "@/types/communityStory";
 
 // Maximum records returned on a single request
 const MAX_RESULTS = 6;
@@ -35,7 +35,7 @@ export async function GET() {
 
     const docs = await cursor.toArray();
 
-    const outventures: PublicOutventure[] = docs.map((doc) => {
+    const stories: CommunityStory[] = docs.map((doc) => {
       // Only expose application photo URL when BOTH photo sharing consent AND a GridFS photo exist.
       // Existing records with photo: null safely yield photoUrl: null.
       const hasPhotoConsent = Boolean(doc.feedback?.sharePhotoPublicly);
@@ -62,8 +62,11 @@ export async function GET() {
       };
     });
 
-    return NextResponse.json<{ outventures: PublicOutventure[] }>(
-      { outventures },
+    return NextResponse.json<{
+      stories: CommunityStory[];
+      beforeWeScrolls: CommunityStory[];
+    }>(
+      { stories, beforeWeScrolls: stories },
       { status: 200 }
     );
   } catch (err: unknown) {
@@ -72,7 +75,7 @@ export async function GET() {
 
     // Do NOT expose internal error details publicly
     return NextResponse.json(
-      { outventures: [] },
+      { stories: [], beforeWeScrolls: [] },
       { status: 500 }
     );
   }

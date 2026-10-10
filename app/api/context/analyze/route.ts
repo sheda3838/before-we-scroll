@@ -28,7 +28,7 @@ function buildMultimodalExtractionPrompt(
   hasImage: boolean
 ): string {
   const parts: string[] = [
-    `You are the context extraction engine for Outventure AI.`,
+    `You are the context extraction engine for Before We Scroll.`,
     ``,
     `Your job is to extract mission context into a structured MissionContext JSON object.`,
     ``,
