@@ -1,28 +1,121 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCompletionsCollection } from "@/lib/mongodb";
+import crypto from "crypto";
+import type { ObjectId } from "mongodb";
+import { getCompletionsCollection, getCompletionPhotosBucket } from "@/lib/mongodb";
 import type {
   CompletionSubmissionPayload,
   CompletionDocument,
   CompletionApiResponse,
+  StoredCompletionPhoto,
 } from "@/types/completion";
 import type { FeedbackRating, ContextMatchOption, InstructionAccuracyOption, DifficultyOption } from "@/types/feedback";
 
+const MAX_PHOTO_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
+const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+/**
+ * Validate image buffer against known magic byte signatures.
+ * Never trust client MIME or filename extension alone.
+ */
+function detectImageMimeType(buffer: Buffer): "image/jpeg" | "image/png" | "image/webp" | null {
+  if (buffer.length < 12) return null;
+
+  // JPEG: FF D8 FF
+  if (buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
+    return "image/jpeg";
+  }
+
+  // PNG: 89 50 4E 47 0D 0A 1A 0A
+  if (
+    buffer[0] === 0x89 &&
+    buffer[1] === 0x50 &&
+    buffer[2] === 0x4e &&
+    buffer[3] === 0x47 &&
+    buffer[4] === 0x0d &&
+    buffer[5] === 0x0a &&
+    buffer[6] === 0x1a &&
+    buffer[7] === 0x0a
+  ) {
+    return "image/png";
+  }
+
+  // WebP: RIFF .... WEBP
+  if (
+    buffer[0] === 0x52 &&
+    buffer[1] === 0x49 &&
+    buffer[2] === 0x46 &&
+    buffer[3] === 0x46 &&
+    buffer[8] === 0x57 &&
+    buffer[9] === 0x45 &&
+    buffer[10] === 0x42 &&
+    buffer[11] === 0x50
+  ) {
+    return "image/webp";
+  }
+
+  return null;
+}
+
 export async function POST(req: NextRequest) {
+  let uploadedGridFsId: ObjectId | null = null;
+
   try {
     const contentType = req.headers.get("content-type") || "";
-    if (!contentType.includes("application/json")) {
+
+    let body: Partial<CompletionSubmissionPayload> | null = null;
+    let photoFile: File | null = null;
+
+    if (contentType.includes("multipart/form-data")) {
+      let formData: FormData;
+      try {
+        formData = await req.formData();
+      } catch {
+        return NextResponse.json<CompletionApiResponse>(
+          { success: false, error: "Invalid multipart form data." },
+          { status: 400 }
+        );
+      }
+
+      const payloadRaw = formData.get("payload");
+      if (!payloadRaw || typeof payloadRaw !== "string") {
+        return NextResponse.json<CompletionApiResponse>(
+          { success: false, error: "Missing payload in form data." },
+          { status: 400 }
+        );
+      }
+
+      try {
+        body = JSON.parse(payloadRaw);
+      } catch {
+        return NextResponse.json<CompletionApiResponse>(
+          { success: false, error: "Invalid JSON in payload field." },
+          { status: 400 }
+        );
+      }
+
+      const rawPhoto = formData.get("photo");
+      if (rawPhoto && typeof rawPhoto === "object" && typeof (rawPhoto as File).arrayBuffer === "function") {
+        photoFile = rawPhoto as File;
+      }
+    } else if (contentType.includes("application/json")) {
+      try {
+        body = await req.json();
+      } catch {
+        return NextResponse.json<CompletionApiResponse>(
+          { success: false, error: "Invalid JSON payload." },
+          { status: 400 }
+        );
+      }
+    } else {
       return NextResponse.json<CompletionApiResponse>(
-        { success: false, error: "Invalid content type. Expected application/json." },
+        { success: false, error: "Invalid content type. Expected multipart/form-data or application/json." },
         { status: 400 }
       );
     }
 
-    let body: Partial<CompletionSubmissionPayload>;
-    try {
-      body = await req.json();
-    } catch {
+    if (!body) {
       return NextResponse.json<CompletionApiResponse>(
-        { success: false, error: "Invalid JSON payload." },
+        { success: false, error: "Missing completion payload." },
         { status: 400 }
       );
     }
@@ -102,8 +195,73 @@ export async function POST(req: NextRequest) {
     // Public photo sharing strictly requires public feedback sharing
     const sharePhotoPublicly = shareFeedbackPublicly && Boolean(feedback.sharePhotoPublicly);
 
-    // 5. Construct normalized completion document
+    // 5. Optional photo validation & GridFS persistence
     const now = new Date();
+    let storedPhotoMeta: StoredCompletionPhoto | null = null;
+
+    if (photoFile && photoFile.size > 0) {
+      // Validate file size (max 10MB)
+      if (photoFile.size > MAX_PHOTO_SIZE_BYTES) {
+        return NextResponse.json<CompletionApiResponse>(
+          { success: false, error: "Photo size exceeds maximum limit of 10MB." },
+          { status: 400 }
+        );
+      }
+
+      // Validate declared MIME type
+      if (!ALLOWED_MIME_TYPES.includes(photoFile.type)) {
+        return NextResponse.json<CompletionApiResponse>(
+          { success: false, error: "Unsupported image type. Allowed formats: JPEG, PNG, WebP." },
+          { status: 400 }
+        );
+      }
+
+      const photoBuffer = Buffer.from(await photoFile.arrayBuffer());
+
+      // Validate binary magic bytes signature
+      const detectedMime = detectImageMimeType(photoBuffer);
+      if (!detectedMime) {
+        return NextResponse.json<CompletionApiResponse>(
+          { success: false, error: "Invalid image content. File signature does not match JPEG, PNG, or WebP." },
+          { status: 400 }
+        );
+      }
+
+      const extMap: Record<string, string> = {
+        "image/jpeg": "jpg",
+        "image/png": "png",
+        "image/webp": "webp",
+      };
+      const ext = extMap[detectedMime] || "jpg";
+      const safeFilename = `completion-${crypto.randomUUID()}.${ext}`;
+
+      const bucket = await getCompletionPhotosBucket();
+      const uploadStream = bucket.openUploadStream(safeFilename, {
+        metadata: {
+          completionPurpose: "mission-completion",
+          mimeType: detectedMime,
+          uploadedAt: now,
+        },
+      });
+
+      uploadedGridFsId = uploadStream.id;
+
+      await new Promise<void>((resolve, reject) => {
+        uploadStream.on("finish", () => resolve());
+        uploadStream.on("error", (err) => reject(err));
+        uploadStream.end(photoBuffer);
+      });
+
+      storedPhotoMeta = {
+        gridFsFileId: uploadedGridFsId,
+        mimeType: detectedMime,
+        filename: safeFilename,
+        size: photoBuffer.length,
+        uploadedAt: now,
+      };
+    }
+
+    // 6. Construct normalized completion document
     const document: CompletionDocument = {
       sessionId: sessionId.trim(),
       context: {
@@ -154,12 +312,12 @@ export async function POST(req: NextRequest) {
         shareFeedbackPublicly,
         sharePhotoPublicly,
       },
-      photo: null,
+      photo: storedPhotoMeta,
       createdAt: now,
       updatedAt: now,
     };
 
-    // 6. Insert into MongoDB
+    // 7. Insert into MongoDB completions collection
     const collection = await getCompletionsCollection();
     const result = await collection.insertOne(document);
 
@@ -173,6 +331,16 @@ export async function POST(req: NextRequest) {
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : String(err);
     console.error("[POST /api/completions] Save failure:", errorMsg);
+
+    // Section 10: Clean up orphaned GridFS file if document insertion failed
+    if (uploadedGridFsId) {
+      try {
+        const bucket = await getCompletionPhotosBucket();
+        await bucket.delete(uploadedGridFsId);
+      } catch (cleanupErr) {
+        console.error("[POST /api/completions] Failed to clean up orphaned GridFS file:", cleanupErr);
+      }
+    }
 
     return NextResponse.json<CompletionApiResponse>(
       {

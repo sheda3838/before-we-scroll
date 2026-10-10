@@ -1394,3 +1394,51 @@ A new server-side TTS endpoint was introduced:
 
 ```text
 POST /api/tts
+
+
+# Phase 8 — MongoDB GridFS Completion Photo Persistence
+
+**Status:** Completed
+
+## Goal
+
+Phase 8 completed the photo-sharing loop for Outventure AI.
+
+Completion photos selected during mission feedback are now stored directly inside MongoDB using GridFS.
+
+The completed flow is:
+
+**Mission Complete**
+→ **Leave Feedback**
+→ **Optional Completion Photo**
+→ **Submit Feedback**
+→ **MongoDB GridFS stores image**
+→ **Completion document stores image metadata**
+→ **Public consent checked**
+→ **Real Outventures card displays approved photo**
+
+No external image-storage service is used.
+
+---
+
+## Why GridFS
+
+The application intentionally stores the actual photo inside MongoDB.
+
+Instead of placing large image binaries directly inside the normal `completions` BSON document, the project uses MongoDB GridFS.
+
+This keeps completion documents lightweight while still storing the real file bytes in MongoDB.
+
+The architecture is:
+
+```text
+MongoDB
+│
+├── completions
+│    └── completion document
+│         └── photo metadata / GridFS reference
+│
+├── completionPhotos.files
+│
+└── completionPhotos.chunks
+     └── actual image binary

@@ -33,6 +33,14 @@ export interface CompletionSubmissionPayload {
   feedback: FeedbackData;
 }
 
+export interface StoredCompletionPhoto {
+  gridFsFileId: ObjectId | string;
+  mimeType: string;
+  filename: string;
+  size: number;
+  uploadedAt: Date | string;
+}
+
 export interface CompletionDocument {
   _id?: ObjectId;
   sessionId: string;
@@ -40,7 +48,7 @@ export interface CompletionDocument {
   mission: Mission;
   execution: MissionExecutionInfo;
   feedback: FeedbackData;
-  photo: null;
+  photo: StoredCompletionPhoto | null;
   createdAt: Date;
   updatedAt: Date;
 }

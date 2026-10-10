@@ -1,4 +1,4 @@
-import { MongoClient, Collection, Db } from "mongodb";
+import { MongoClient, Collection, Db, GridFSBucket } from "mongodb";
 import type { CompletionDocument } from "@/types/completion";
 
 declare global {
@@ -51,6 +51,11 @@ export async function getCompletionsCollection(): Promise<Collection<CompletionD
   }
 
   return collection;
+}
+
+export async function getCompletionPhotosBucket(): Promise<GridFSBucket> {
+  const db = await getDatabase();
+  return new GridFSBucket(db, { bucketName: "completionPhotos" });
 }
 
 export default getClientPromise;

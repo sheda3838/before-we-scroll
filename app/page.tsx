@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback, useSyncExternalStore } from "react";
+import type { PublicOutventure } from "@/types/publicOutventure";
 import {
   MissionContext,
   IntensityLevel,
@@ -160,6 +161,11 @@ export default function Home() {
   const [isSavingFeedback, setIsSavingFeedback] = useState(false);
   const [savedCompletionId, setSavedCompletionId] = useState<string | null>(null);
 
+  // Community "Real Outventures" section state
+  const [communityOutventures, setCommunityOutventures] = useState<PublicOutventure[] | null>(null);
+  const [communityLoading, setCommunityLoading] = useState(true);
+  const [communityError, setCommunityError] = useState(false);
+
   const feedbackCameraInputRef = useRef<HTMLInputElement>(null);
   const feedbackGalleryInputRef = useRef<HTMLInputElement>(null);
 
@@ -181,6 +187,36 @@ export default function Home() {
   const stepsAudioRef = useRef<HTMLAudioElement | null>(null);
   const stepsAudioUrlRef = useRef<string | null>(null);
   const stepsAudioMissionIdRef = useRef<string | null>(null);
+
+  // Fetch public community completions once on mount.
+  // communityLoading starts as true (initial state), so no synchronous setState needed here.
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/public/completions")
+      .then((res) => {
+        if (!res.ok) throw new Error("non-ok");
+        return res.json();
+      })
+      .then((data) => {
+        if (!cancelled) {
+          setCommunityOutventures(
+            Array.isArray(data?.outventures) ? data.outventures : []
+          );
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setCommunityError(true);
+          setCommunityOutventures([]);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setCommunityLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     fullAudioUrlRef.current = fullAudioUrl;
@@ -744,12 +780,15 @@ export default function Home() {
         },
       };
 
+      const formData = new FormData();
+      formData.append("payload", JSON.stringify(payload));
+      if (feedbackPhoto) {
+        formData.append("photo", feedbackPhoto);
+      }
+
       const res = await fetch("/api/completions", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
+        body: formData,
       });
 
       const data: CompletionApiResponse = await res.json();
@@ -1347,10 +1386,10 @@ export default function Home() {
             Outventure AI
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl text-zinc-900 dark:text-zinc-50">
-            Plan Your Next Outventure
+            Turn your surroundings into an adventure.
           </h1>
           <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-md mx-auto">
-            Describe your group, snap or upload your surroundings — we will organize your mission context in seconds.
+            Describe where you are, your group, and what you want to do — then pick from three tailored missions. Use voice or a photo to make it even easier.
           </p>
         </div>
 
@@ -1633,6 +1672,183 @@ export default function Home() {
             </div>
           )}
         </div>
+
+        {/* ── How It Works ── shown only on initial landing, before context is extracted */}
+        {!extractedContext && (
+          <section
+            aria-label="How Outventure AI works"
+            className="w-full py-8 space-y-5"
+          >
+            <div className="text-center">
+              <h2 className="text-base font-bold tracking-tight text-zinc-800 dark:text-zinc-100">
+                How it works
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Step 1 */}
+              <div className="flex flex-col items-center text-center p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800/80 shadow-sm gap-3">
+                <span className="text-2xl" aria-hidden="true">💬</span>
+                <div>
+                  <p className="text-sm font-bold text-zinc-800 dark:text-zinc-100">Tell us</p>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
+                    Describe your time, group, mood, and surroundings — or speak it, or snap a photo.
+                  </p>
+                </div>
+              </div>
+
+              {/* Step 2 */}
+              <div className="flex flex-col items-center text-center p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800/80 shadow-sm gap-3">
+                <span className="text-2xl" aria-hidden="true">🎯</span>
+                <div>
+                  <p className="text-sm font-bold text-zinc-800 dark:text-zinc-100">Pick a mission</p>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
+                    Outventure AI creates three missions tailored to your context.
+                  </p>
+                </div>
+              </div>
+
+              {/* Step 3 */}
+              <div className="flex flex-col items-center text-center p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800/80 shadow-sm gap-3">
+                <span className="text-2xl" aria-hidden="true">🌿</span>
+                <div>
+                  <p className="text-sm font-bold text-zinc-800 dark:text-zinc-100">Go outside</p>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
+                    Choose one, start the timer, and complete it in the real world.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ── Real Outventures ── community section, shown only on initial landing */}
+        {!extractedContext && (
+          <section
+            aria-label="Real Outventures community section"
+            className="w-full pb-10 space-y-5"
+          >
+            <div className="text-center space-y-1">
+              <h2 className="text-base font-bold tracking-tight text-zinc-800 dark:text-zinc-100">
+                Real Outventures
+              </h2>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                See how other people turned ordinary places into something worth doing.
+              </p>
+            </div>
+
+            {/* Loading skeletons */}
+            {communityLoading && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[0, 1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className="rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800/80 shadow-sm p-5 space-y-3 animate-pulse"
+                  >
+                    <div className="h-3 w-20 bg-zinc-200 dark:bg-zinc-700 rounded" />
+                    <div className="h-3.5 w-3/4 bg-zinc-200 dark:bg-zinc-700 rounded" />
+                    <div className="h-3 w-1/2 bg-zinc-200 dark:bg-zinc-700 rounded" />
+                    <div className="h-3 w-full bg-zinc-100 dark:bg-zinc-800 rounded" />
+                    <div className="h-3 w-5/6 bg-zinc-100 dark:bg-zinc-800 rounded" />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* API failure — graceful, non-blocking */}
+            {!communityLoading && communityError && (
+              <p className="text-center text-xs text-zinc-400 dark:text-zinc-500 py-4">
+                More Outventures coming soon.
+              </p>
+            )}
+
+            {/* No public records yet */}
+            {!communityLoading && !communityError && communityOutventures !== null && communityOutventures.length === 0 && (
+              <div className="rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800/80 shadow-sm p-8 text-center">
+                <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                  Real Outventures will appear here as explorers share their experiences.
+                </p>
+              </div>
+            )}
+
+            {/* Community cards */}
+            {!communityLoading && !communityError && communityOutventures && communityOutventures.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {communityOutventures.map((outventure) => {
+                  const clampedComment =
+                    outventure.comment.length > 240
+                      ? outventure.comment.slice(0, 240).trimEnd() + "…"
+                      : outventure.comment;
+
+                  const intensityLabel =
+                    outventure.intensity === "low"
+                      ? "Low"
+                      : outventure.intensity === "medium"
+                      ? "Medium"
+                      : "High";
+
+                  return (
+                    <article
+                      key={outventure.id}
+                      className="flex flex-col rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800/80 shadow-sm overflow-hidden"
+                    >
+                      {/* Optional completion photo */}
+                      {outventure.photoUrl && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={outventure.photoUrl}
+                          alt={`Completion photo for ${outventure.missionTitle}`}
+                          className="w-full aspect-video object-cover"
+                        />
+                      )}
+
+                      <div className="flex flex-col flex-1 gap-3 p-5">
+                        {/* Star rating */}
+                        <div
+                          className="flex items-center gap-1"
+                          aria-label={`Rated ${outventure.rating} out of 5`}
+                          role="img"
+                        >
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <span
+                              key={star}
+                              className={
+                                outventure.rating >= star
+                                  ? "text-amber-400 text-base"
+                                  : "text-zinc-300 dark:text-zinc-700 text-base"
+                              }
+                              aria-hidden="true"
+                            >
+                              ★
+                            </span>
+                          ))}
+                        </div>
+
+                        {/* Public comment — safe React text rendering, no dangerouslySetInnerHTML */}
+                        {clampedComment && (
+                          <p className="text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed italic flex-1">
+                            &ldquo;{clampedComment}&rdquo;
+                          </p>
+                        )}
+
+                        {/* Mission info */}
+                        <div className="mt-auto space-y-0.5">
+                          <p className="text-xs font-bold text-zinc-800 dark:text-zinc-100 truncate">
+                            {outventure.missionTitle}
+                          </p>
+                          <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                            {outventure.durationMinutes} min&nbsp;&bull;&nbsp;{intensityLabel}
+                          </p>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        )}
+
           </>
         )}
 
