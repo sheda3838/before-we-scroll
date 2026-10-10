@@ -5,6 +5,7 @@ import {
   MissionContext,
   IntensityLevel,
   SpaceSize,
+  createEmptyMissionContext,
 } from "@/types/missionContext";
 import { Mission } from "@/types/mission";
 import {
@@ -14,6 +15,10 @@ import {
   DifficultyOption,
   CompletedMissionFeedbackSubmission,
 } from "@/types/feedback";
+import {
+  CompletionSubmissionPayload,
+  CompletionApiResponse,
+} from "@/types/completion";
 import { unlockAudio, playNearEndWarningSound, playMissionCompleteSound } from "@/lib/soundEffects";
 import {
   ACTIVE_MISSION_STORAGE_KEY,
@@ -23,6 +28,25 @@ import {
   formatCountdown,
   formatAccessibleTime,
 } from "@/lib/timerUtils";
+
+const SESSION_STORAGE_KEY = "outventure-session-id";
+
+function getOrCreateSessionId(): string {
+  if (typeof window === "undefined") return "";
+  try {
+    let sid = localStorage.getItem(SESSION_STORAGE_KEY);
+    if (!sid) {
+      sid =
+        typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+          ? crypto.randomUUID()
+          : `session-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      localStorage.setItem(SESSION_STORAGE_KEY, sid);
+    }
+    return sid;
+  } catch {
+    return `session-${Date.now()}`;
+  }
+}
 
 function subscribeToTouch(callback: () => void) {
   if (typeof window === "undefined") return () => {};
@@ -81,6 +105,8 @@ export default function Home() {
   // Active Mission & Timer Execution State
   const [missionStartedAt, setMissionStartedAt] = useState<number | null>(null);
   const [missionExpectedEndAt, setMissionExpectedEndAt] = useState<number | null>(null);
+  const [missionCompletedAt, setMissionCompletedAt] = useState<number | null>(null);
+  const [missionCompletedEarly, setMissionCompletedEarly] = useState<boolean>(false);
   const [missionRemainingMs, setMissionRemainingMs] = useState<number>(0);
   const [missionCompleted, setMissionCompleted] = useState<boolean>(false);
   const [warningTriggered, setWarningTriggered] = useState<boolean>(false);
@@ -122,6 +148,8 @@ export default function Home() {
   const [feedbackValidationError, setFeedbackValidationError] = useState<string | null>(null);
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const [submittedFeedback, setSubmittedFeedback] = useState<CompletedMissionFeedbackSubmission | null>(null);
+  const [isSavingFeedback, setIsSavingFeedback] = useState(false);
+  const [savedCompletionId, setSavedCompletionId] = useState<string | null>(null);
 
   const feedbackCameraInputRef = useRef<HTMLInputElement>(null);
   const feedbackGalleryInputRef = useRef<HTMLInputElement>(null);
@@ -147,6 +175,8 @@ export default function Home() {
             // Expected end timestamp already passed while user was away
             setMissionRemainingMs(0);
             setMissionCompleted(true);
+            setMissionCompletedAt(data.completedAt || data.expectedEndAt);
+            setMissionCompletedEarly(Boolean(data.completedEarly));
             try {
               localStorage.removeItem(ACTIVE_MISSION_STORAGE_KEY);
             } catch {
@@ -210,6 +240,8 @@ export default function Home() {
         }
         setMissionRemainingMs(0);
         setMissionCompleted(true);
+        setMissionCompletedAt(Date.now());
+        setMissionCompletedEarly(false);
         try {
           localStorage.removeItem(ACTIVE_MISSION_STORAGE_KEY);
         } catch {
@@ -296,6 +328,8 @@ export default function Home() {
     setFeedbackValidationError(null);
     setFeedbackSubmitted(false);
     setSubmittedFeedback(null);
+    setIsSavingFeedback(false);
+    setSavedCompletionId(null);
   };
 
   const handleFeedbackPhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -345,7 +379,7 @@ export default function Home() {
     }
   };
 
-  const handleSubmitFeedback = (e: React.FormEvent) => {
+  const handleSubmitFeedback = async (e: React.FormEvent) => {
     e.preventDefault();
     setFeedbackValidationError(null);
 
@@ -356,30 +390,86 @@ export default function Home() {
 
     if (!selectedMission) return;
 
-    const submission: CompletedMissionFeedbackSubmission = {
-      mission: {
-        id: selectedMission.id,
-        title: selectedMission.title,
-        shortDescription: selectedMission.shortDescription,
-        durationMinutes: selectedMission.durationMinutes,
-        intensity: selectedMission.intensity,
-        players: selectedMission.players,
-      },
-      feedback: {
-        rating: feedbackRating,
-        contextMatch: feedbackContextMatch,
-        instructionsAccurate: feedbackInstructionsAccurate,
-        difficulty: feedbackDifficulty,
-        comment: feedbackComment.trim(),
-        shareFeedbackPublicly,
-        sharePhotoPublicly: shareFeedbackPublicly ? sharePhotoPublicly : false,
-      },
-      completionPhoto: feedbackPhoto,
-      completedAt: new Date().toISOString(),
-    };
+    setIsSavingFeedback(true);
 
-    setSubmittedFeedback(submission);
-    setFeedbackSubmitted(true);
+    try {
+      const sessionId = getOrCreateSessionId();
+      const startedIso = new Date(
+        missionStartedAt || Date.now() - selectedMission.durationMinutes * 60 * 1000
+      ).toISOString();
+      const expectedIso = new Date(
+        missionExpectedEndAt || Date.now()
+      ).toISOString();
+      const completedIso = new Date(
+        missionCompletedAt || Date.now()
+      ).toISOString();
+
+      const payload: CompletionSubmissionPayload = {
+        sessionId,
+        context: extractedContext || createEmptyMissionContext(),
+        mission: selectedMission,
+        execution: {
+          startedAt: startedIso,
+          expectedEndAt: expectedIso,
+          completedAt: completedIso,
+          completedEarly: missionCompletedEarly,
+        },
+        feedback: {
+          rating: feedbackRating,
+          contextMatch: feedbackContextMatch,
+          instructionsAccurate: feedbackInstructionsAccurate,
+          difficulty: feedbackDifficulty,
+          comment: feedbackComment.trim(),
+          shareFeedbackPublicly,
+          sharePhotoPublicly: shareFeedbackPublicly ? sharePhotoPublicly : false,
+        },
+      };
+
+      const res = await fetch("/api/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data: CompletionApiResponse = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Unable to save completion.");
+      }
+
+      setSavedCompletionId(data.completionId || null);
+
+      const submission: CompletedMissionFeedbackSubmission = {
+        mission: {
+          id: selectedMission.id,
+          title: selectedMission.title,
+          shortDescription: selectedMission.shortDescription,
+          durationMinutes: selectedMission.durationMinutes,
+          intensity: selectedMission.intensity,
+          players: selectedMission.players,
+        },
+        feedback: {
+          rating: feedbackRating,
+          contextMatch: feedbackContextMatch,
+          instructionsAccurate: feedbackInstructionsAccurate,
+          difficulty: feedbackDifficulty,
+          comment: feedbackComment.trim(),
+          shareFeedbackPublicly,
+          sharePhotoPublicly: shareFeedbackPublicly ? sharePhotoPublicly : false,
+        },
+        completionPhoto: feedbackPhoto,
+        completedAt: completedIso,
+      };
+
+      setSubmittedFeedback(submission);
+      setFeedbackSubmitted(true);
+    } catch {
+      setFeedbackValidationError("We couldn't save your feedback right now. Please try again.");
+    } finally {
+      setIsSavingFeedback(false);
+    }
   };
 
   const clearMissions = () => {
@@ -394,6 +484,8 @@ export default function Home() {
     setMissionLatencyMs(null);
     setMissionStartedAt(null);
     setMissionExpectedEndAt(null);
+    setMissionCompletedAt(null);
+    setMissionCompletedEarly(false);
     setMissionRemainingMs(0);
     setMissionCompleted(false);
     setWarningTriggered(false);
@@ -416,6 +508,8 @@ export default function Home() {
     setMissionExpectedEndAt(end);
     setMissionRemainingMs(end - now);
     setMissionCompleted(false);
+    setMissionCompletedAt(null);
+    setMissionCompletedEarly(false);
     setWarningTriggered(false);
     setShowDetailsWhileRunning(false);
 
@@ -440,8 +534,11 @@ export default function Home() {
       clearInterval(missionIntervalRef.current);
       missionIntervalRef.current = null;
     }
+    const now = Date.now();
     setMissionRemainingMs(0);
     setMissionCompleted(true);
+    setMissionCompletedAt(now);
+    setMissionCompletedEarly(true);
     try {
       localStorage.removeItem(ACTIVE_MISSION_STORAGE_KEY);
     } catch {
@@ -464,6 +561,8 @@ export default function Home() {
     resetFeedbackState();
     setMissionStartedAt(null);
     setMissionExpectedEndAt(null);
+    setMissionCompletedAt(null);
+    setMissionCompletedEarly(false);
     setMissionRemainingMs(0);
     setMissionCompleted(false);
     setWarningTriggered(false);
@@ -2678,10 +2777,20 @@ export default function Home() {
 
                     <button
                       type="submit"
-                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-xs shadow-md transition cursor-pointer"
+                      disabled={isSavingFeedback}
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold text-xs shadow-md transition cursor-pointer"
                     >
-                      <span>Submit Feedback</span>
-                      <span>✓</span>
+                      {isSavingFeedback ? (
+                        <>
+                          <span className="inline-block animate-spin">⏳</span>
+                          <span>Saving feedback...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Submit Feedback</span>
+                          <span>✓</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 </form>
@@ -2702,6 +2811,9 @@ export default function Home() {
                   <p className="text-sm text-zinc-600 dark:text-zinc-300 max-w-md mx-auto leading-relaxed">
                     Your feedback helps improve future Outventures.
                   </p>
+                  {savedCompletionId && (
+                    <span className="sr-only" aria-hidden="true" data-completion-id={savedCompletionId} />
+                  )}
                 </div>
 
                 {/* Rating Recap */}

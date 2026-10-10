@@ -1280,49 +1280,89 @@ expectedEndAt =
   startedAt + selectedMission.durationMinutes * 60 * 1000;
 
 
-## Phase 3B — Mission Completion Feedback Experience
+# Phase 5B — Mission Completion Feedback & Optional Photo
 
-Implemented a complete post-mission feedback experience for Outventure AI.
+**Status:** Completed
 
-### What was added
-- Added structured mission feedback types in `types/feedback.ts`.
-- Added a full feedback form to the Mission Complete flow.
-- Added an overall 1–5 star mission rating.
-- Added contextual feedback questions:
-  - Was this mission a good match for your situation?
-  - Were the instructions accurate and easy to follow?
-  - How did the mission feel?
-- Added an optional free-text comment field with a 1,000-character limit.
-- Added optional mission completion photo support.
-- Added desktop photo selection and mobile camera/gallery support.
-- Added photo validation for JPEG, PNG, and WebP files up to 10MB.
-- Added local image preview, change, and remove controls.
-- Added safe object URL cleanup to prevent memory leaks.
-- Added a thank-you state after feedback submission.
-- Added full feedback reset behavior when returning to missions or planning a new Outventure.
+## Goal
 
-### Public Sharing Controls
-- `Share my feedback publicly` now defaults to **enabled**.
-- Users can freely disable public sharing at any time.
-- Public photo sharing remains **disabled by default** and requires a separate explicit opt-in.
-- Disabling public feedback sharing automatically disables public photo sharing.
-- Uploaded photos remain preserved locally even if public sharing is later disabled.
+Phase 5B added a structured completion-feedback experience after a user finishes a mission.
 
-### Rating UX
-- Mission rating now defaults to **5/5** when the feedback form opens.
-- All five stars are initially selected.
-- Users can reduce the rating by selecting a lower star.
-- Starting a new mission or resetting the feedback flow restores the rating to 5/5.
+The completed flow is:
 
-### Data Handling
-- Feedback is currently stored only in local React state.
-- No database persistence was introduced.
-- No external image storage service was added.
-- Completion photos are not sent to any AI model.
-- Existing mission generation, voice input, image context, analysis, timers, warnings, and mission execution flows remain unchanged.
+**Mission Complete**
+→ **Leave Feedback**
+→ **Rate Mission**
+→ **Context Match**
+→ **Instruction Accuracy**
+→ **Difficulty Feedback**
+→ **Optional Comment**
+→ **Optional Completion Photo**
+→ **Public Sharing Preferences**
+→ **Submit Feedback**
+→ **Thank-You State**
 
-### Validation
-- `npx tsc --noEmit` — passed with 0 errors.
-- `npm run lint` — passed with 0 warnings and 0 errors.
-- `npm run build` — passed successfully with all routes compiling cleanly under Next.js Turbopack.
-- Manual UI testing completed successfully.
+This phase intentionally does not persist feedback to a database yet.
+
+The complete feedback object is currently held in React state and is structured for persistence in a later phase.
+
+---
+
+## Feedback Data Model
+
+A dedicated feedback type was introduced in:
+
+`types/feedback.ts`
+
+Core types include:
+
+```ts
+export type FeedbackRating = 1 | 2 | 3 | 4 | 5;
+
+export type ContextMatchOption =
+  | "yes"
+  | "mostly"
+  | "no";
+
+export type InstructionAccuracyOption =
+  | "yes"
+  | "mostly"
+  | "no";
+
+export type DifficultyOption =
+  | "too-easy"
+  | "just-right"
+  | "too-hard";
+
+
+# Phase 6 — MongoDB Mission Completion Persistence
+
+**Status:** Completed
+
+## Goal
+
+Phase 6 introduced persistent storage for completed Outventure missions and user feedback.
+
+The completed persistence flow is:
+
+**Mission Complete**
+→ **Leave Feedback**
+→ **Submit Feedback**
+→ **POST /api/completions**
+→ **MongoDB**
+→ **Completion document stored**
+→ **Completion ID returned**
+→ **Thank-You state**
+
+The persistence layer stores meaningful long-term mission data only.
+
+Temporary UI state, recordings, diagnostics, and image binaries are intentionally excluded.
+
+---
+
+## MongoDB Driver
+
+The project now uses the official MongoDB Node.js driver:
+
+```text
+mongodb

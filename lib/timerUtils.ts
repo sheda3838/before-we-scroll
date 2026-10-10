@@ -7,6 +7,8 @@ export interface StoredActiveMission {
   startedAt: number;
   expectedEndAt: number;
   warningTriggered?: boolean;
+  completedAt?: number;
+  completedEarly?: boolean;
 }
 
 /**
